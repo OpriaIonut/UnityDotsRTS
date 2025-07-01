@@ -43,7 +43,7 @@ namespace DotsRTS
 
                 materialMesh.Mesh = animData.meshes[anim.frame];
 
-                if (anim.frame == 0 && (anim.activeAnim == AnimationType.SoldierShoot || anim.activeAnim == AnimationType.ZombieAttack))
+                if (anim.frame == 0 && AnimationDataSO.IsAnimationUninterruptible(anim.activeAnim))
                 {
                     anim.activeAnim = AnimationType.None;
                 }

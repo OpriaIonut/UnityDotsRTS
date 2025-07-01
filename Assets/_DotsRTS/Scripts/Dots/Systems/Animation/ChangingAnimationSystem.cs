@@ -32,6 +32,9 @@ namespace DotsRTS
 
             public void Execute(ref ActiveAnimation anim, ref MaterialMeshInfo mesh)
             {
+                if (AnimationDataSO.IsAnimationUninterruptible(anim.activeAnim))
+                    return;
+
                 if (anim.activeAnim != anim.nextAnim)
                 {
                     anim.frame = 0;
