@@ -1,0 +1,46 @@
+using Unity.Burst;
+using Unity.Entities;
+
+namespace DotsRTS
+{
+    [UpdateInGroup(typeof(LateSimulationSystemGroup), OrderLast = true)]
+    partial struct ResetEventsSystem : ISystem
+    {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            new ResetSelectedEventsJob().ScheduleParallel();
+            new ResetHealthEventsJob().ScheduleParallel();
+            new ResetShootAttackEventsJob().ScheduleParallel();
+        }
+    }
+
+    [BurstCompile]
+    public partial struct ResetHealthEventsJob : IJobEntity
+    {
+        public void Execute(ref Health health)
+        {
+            health.onHealthChanged = false;
+        }
+    }
+
+    [BurstCompile]
+    public partial struct ResetShootAttackEventsJob : IJobEntity
+    {
+        public void Execute(ref ShootAttack shootAttack)
+        {
+            shootAttack.onShoot = false;
+        }
+    }
+
+    [BurstCompile]
+    [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
+    public partial struct ResetSelectedEventsJob : IJobEntity
+    {
+        public void Execute(ref Selected selected)
+        {
+            selected.onSelected = false;
+            selected.onDeselected = false;
+        }
+    }
+}
