@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Rendering;
+using UnityEngine;
 
 namespace DotsRTS
 {
@@ -8,20 +9,37 @@ namespace DotsRTS
     partial struct ChangingAnimationSystem : ISystem
     {
         [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<AnimationDataHolder>();
+        }
+
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             AnimationDataHolder animHolder = SystemAPI.GetSingleton<AnimationDataHolder>();
 
-            foreach(var (anim, mesh) in SystemAPI.Query<RefRW<ActiveAnimation>, RefRW<MaterialMeshInfo>>())
+            new ChangeAnimationJob
             {
-                if(anim.ValueRO.activeAnim != anim.ValueRO.nextAnim)
-                {
-                    anim.ValueRW.frame = 0;
-                    anim.ValueRW.frameTimer = 0f;
-                    anim.ValueRW.activeAnim = anim.ValueRO.nextAnim;
+                animHolder = animHolder,
+            }.ScheduleParallel();
+        }
 
-                    ref AnimationData animData = ref animHolder.animations.Value[(int)anim.ValueRW.activeAnim];
-                    mesh.ValueRW.MeshID = animData.meshes[0];
+        [BurstCompile]
+        public partial struct ChangeAnimationJob: IJobEntity
+        {
+            public AnimationDataHolder animHolder;
+
+            public void Execute(ref ActiveAnimation anim, ref MaterialMeshInfo mesh)
+            {
+                if (anim.activeAnim != anim.nextAnim)
+                {
+                    anim.frame = 0;
+                    anim.frameTimer = 0f;
+                    anim.activeAnim = anim.nextAnim;
+
+                    ref AnimationData animData = ref animHolder.animations.Value[(int)anim.activeAnim];
+                    mesh.Mesh = animData.meshes[0];
                 }
             }
         }

@@ -8,7 +8,10 @@ namespace DotsRTS
         SoldierIdle,
         SoldierWalk,
         ZombieIdle,
-        ZombieWalk
+        ZombieWalk,
+        SoldierAim,
+        SoldierShoot,
+        ZombieAttack
     }
 
     [CreateAssetMenu(fileName = "AnimationDataSO", menuName = "Scriptable Objects/AnimationDataSO")]

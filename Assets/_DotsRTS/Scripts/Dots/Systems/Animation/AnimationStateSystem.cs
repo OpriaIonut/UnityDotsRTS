@@ -1,38 +1,90 @@
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
+using static UnityEngine.GraphicsBuffer;
 
 namespace DotsRTS
 {
+    [UpdateAfter(typeof(ShootAttackSystem))]
     partial struct AnimationStateSystem : ISystem
     {
+        private ComponentLookup<ActiveAnimation> activeAnimLookup;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            activeAnimLookup = state.GetComponentLookup<ActiveAnimation>();
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            foreach(var (animMesh, mover, unitAnims) in SystemAPI.Query<RefRW<AnimatedMesh>, RefRO<UnitMover>, RefRO<UnitAnimations>>())
-            {
-                var activeAnim = SystemAPI.GetComponentRW<ActiveAnimation>(animMesh.ValueRO.meshEntity);
+            activeAnimLookup.Update(ref state);
+            new IdleMoveStateJob { activeAnimLookup = activeAnimLookup }.ScheduleParallel();
 
-                if(mover.ValueRO.isMoving)
+            activeAnimLookup.Update(ref state);
+            new ShootAimStateJob { activeAnimLookup = activeAnimLookup }.ScheduleParallel();
+
+            activeAnimLookup.Update(ref state);
+            new MeleeStateJob { activeAnimLookup = activeAnimLookup }.ScheduleParallel();
+        }
+
+        [BurstCompile]
+        public partial struct IdleMoveStateJob: IJobEntity
+        {
+            [NativeDisableParallelForRestriction] public ComponentLookup<ActiveAnimation> activeAnimLookup;
+
+            public void Execute(ref AnimatedMesh animMesh, in UnitMover mover, in UnitAnimations unitAnims)
+            {
+                var activeAnim = activeAnimLookup.GetRefRW(animMesh.meshEntity);
+
+                if (activeAnim.ValueRW.activeAnim == AnimationType.SoldierShoot || activeAnim.ValueRW.activeAnim == AnimationType.ZombieAttack)
+                    return;
+
+                if (mover.isMoving)
                 {
-                    activeAnim.ValueRW.nextAnim = unitAnims.ValueRO.walkAnim;
+                    activeAnim.ValueRW.nextAnim = unitAnims.walkAnim;
                 }
                 else
                 {
-                    activeAnim.ValueRW.nextAnim = unitAnims.ValueRO.idleAnim;
+                    activeAnim.ValueRW.nextAnim = unitAnims.idleAnim;
                 }
             }
+        }
 
-            foreach (var (animMesh, shootAttack, unitAnims) in SystemAPI.Query<RefRW<AnimatedMesh>, RefRO<ShootAttack>, RefRO<UnitAnimations>>())
+        [BurstCompile]
+        public partial struct ShootAimStateJob : IJobEntity
+        {
+            [NativeDisableParallelForRestriction] public ComponentLookup<ActiveAnimation> activeAnimLookup;
+
+            public void Execute(ref AnimatedMesh animMesh, in UnitMover mover, in UnitAnimations unitAnims, in ShootAttack shootAttack, in Target target)
             {
-                var activeAnim = SystemAPI.GetComponentRW<ActiveAnimation>(animMesh.ValueRO.meshEntity);
+                var activeAnim = activeAnimLookup.GetRefRW(animMesh.meshEntity);
 
-                if (shootAttack.ValueRO.onShoot)
+                if (!mover.isMoving && target.target != Entity.Null)
                 {
-                    activeAnim.ValueRW.nextAnim = unitAnims.ValueRO.walkAnim;
+                    activeAnim.ValueRW.nextAnim = unitAnims.aimAnim;
                 }
-                else
+
+                if (shootAttack.onShoot)
                 {
-                    activeAnim.ValueRW.nextAnim = unitAnims.ValueRO.idleAnim;
+                    activeAnim.ValueRW.nextAnim = unitAnims.shootAnim;
+                }
+            }
+        }
+
+        [BurstCompile]
+        public partial struct MeleeStateJob : IJobEntity
+        {
+            [NativeDisableParallelForRestriction] public ComponentLookup<ActiveAnimation> activeAnimLookup;
+
+            public void Execute(ref AnimatedMesh animMesh, in UnitAnimations unitAnims, in MeleeAttack meleeAttack)
+            {
+                var activeAnim = activeAnimLookup.GetRefRW(animMesh.meshEntity);
+
+                if (meleeAttack.onAttack)
+                {
+                    activeAnim.ValueRW.nextAnim = unitAnims.meleeAnim;
                 }
             }
         }

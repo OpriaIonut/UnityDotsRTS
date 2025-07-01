@@ -7,12 +7,18 @@ namespace DotsRTS
     {
         public AnimationType idleAnim;
         public AnimationType walkAnim;
+        public AnimationType aimAnim;
+        public AnimationType shootAnim;
+        public AnimationType meleeAnim;
     }
 
     class UnitAnimationsAuthoring : MonoBehaviour
     {
         public AnimationType idleAnim;
         public AnimationType walkAnim;
+        public AnimationType aimAnim;
+        public AnimationType shootAnim;
+        public AnimationType meleeAnim;
 
         class UnitAnimationsAuthoringBaker : Baker<UnitAnimationsAuthoring>
         {
@@ -23,6 +29,9 @@ namespace DotsRTS
                 {
                     idleAnim = authoring.idleAnim,
                     walkAnim = authoring.walkAnim,
+                    aimAnim = authoring.aimAnim,
+                    shootAnim = authoring.shootAnim,
+                    meleeAnim = authoring.meleeAnim,
                 });
             }
         }

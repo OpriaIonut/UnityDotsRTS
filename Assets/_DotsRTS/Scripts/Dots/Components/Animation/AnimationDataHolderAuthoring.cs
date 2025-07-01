@@ -11,7 +11,7 @@ namespace DotsRTS
     {
         public float frameTimerMax;
         public int frameMax;
-        public BlobArray<BatchMeshID> meshes;
+        public BlobArray<int> meshes;
     }
 
     public struct AnimationDataHolder: IComponentData
@@ -19,9 +19,21 @@ namespace DotsRTS
         public BlobAssetReference<BlobArray<AnimationData>> animations;
     }
 
+    public struct AnimationDataHolderSubEntity: IComponentData
+    {
+        public AnimationType anim;
+        public int meshIndex;
+    }
+
+    public struct AnimationDataholderObjectData: IComponentData
+    {
+        public UnityObjectRef<AnimationDataListSO> animList;
+    }
+
     class AnimationDataHolderAuthoring : MonoBehaviour
     {
         public AnimationDataListSO animations;
+        public Material defaultMat;
 
         class AnimationDataHolderAuthoringBaker : Baker<AnimationDataHolderAuthoring>
         {
@@ -31,38 +43,38 @@ namespace DotsRTS
 
                 AnimationDataHolder holder = new AnimationDataHolder();
                 CreateBlob(ref holder, authoring);
+
+                AddComponent(entity, new AnimationDataholderObjectData
+                {
+                    animList = authoring.animations
+                });
                 AddComponent(entity, holder);
             }
 
             private void CreateBlob(ref AnimationDataHolder holder, AnimationDataHolderAuthoring authoring)
             {
-                BlobBuilder builder = new BlobBuilder(Allocator.Temp);
-                ref BlobArray<AnimationData> animData = ref builder.ConstructRoot<BlobArray<AnimationData>>();
-                BlobBuilderArray<AnimationData> animDataArr = builder.Allocate(ref animData, System.Enum.GetValues(typeof(AnimationType)).Length);
-
-                EntitiesGraphicsSystem graphics = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<EntitiesGraphicsSystem>();
-
                 int animIndex = 0;
                 foreach (AnimationType type in System.Enum.GetValues(typeof(AnimationType)))
                 {
                     AnimationDataSO anim = authoring.animations.GetAnimationData(type);
 
-                    animDataArr[animIndex].frameTimerMax = anim.frameTimerMax;
-                    animDataArr[animIndex].frameMax = anim.meshArray.Length;
-
-                    var blobArray = builder.Allocate(ref animDataArr[animIndex].meshes, anim.meshArray.Length);
                     for (int index = 0; index < anim.meshArray.Length; ++index)
                     {
-                        blobArray[index] = graphics.RegisterMesh(anim.meshArray[index]);
+                        Entity additionalEntity = CreateAdditionalEntity(TransformUsageFlags.None, true, "SubEntity");
+                        AddComponent(additionalEntity, new MaterialMeshInfo());
+                        AddComponent(additionalEntity, new RenderMeshUnmanaged
+                        {
+                            mesh = anim.meshArray[index],
+                            materialForSubMesh = authoring.defaultMat
+                        });
+                        AddComponent(additionalEntity, new AnimationDataHolderSubEntity
+                        {
+                            anim = type,
+                            meshIndex = index
+                        });
                     }
                     ++animIndex;
                 }
-
-
-                holder.animations = builder.CreateBlobAssetReference<BlobArray<AnimationData>>(Allocator.Persistent);
-
-                builder.Dispose();
-                AddBlobAsset(ref holder.animations, out Unity.Entities.Hash128 hash);
             }
         }
     }

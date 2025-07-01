@@ -21,8 +21,6 @@ namespace DotsRTS
         {
             public override void Bake(ActiveAnimationAuthoring authoring)
             {
-                var graphics = World.DefaultGameObjectInjectionWorld.GetExistingSystemManaged<EntitiesGraphicsSystem>();
-
                 Entity entity = GetEntity(TransformUsageFlags.Dynamic);
                 AddComponent(entity, new ActiveAnimation
                 {

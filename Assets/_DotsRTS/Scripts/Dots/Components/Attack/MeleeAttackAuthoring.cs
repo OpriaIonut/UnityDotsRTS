@@ -9,6 +9,7 @@ namespace DotsRTS
         public float timerMax;
         public int damage;
         public float colliderSize;
+        public bool onAttack;
     }
 
     class MeleeAttackAuthoring : MonoBehaviour

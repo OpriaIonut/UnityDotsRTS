@@ -1,17 +1,30 @@
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 
 namespace DotsRTS
 {
     [UpdateInGroup(typeof(LateSimulationSystemGroup), OrderLast = true)]
     partial struct ResetEventsSystem : ISystem
     {
+        private NativeArray<JobHandle> spawnedJobs;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            spawnedJobs = new NativeArray<JobHandle>(4, Allocator.Persistent);
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            new ResetSelectedEventsJob().ScheduleParallel();
-            new ResetHealthEventsJob().ScheduleParallel();
-            new ResetShootAttackEventsJob().ScheduleParallel();
+            spawnedJobs[0] = new ResetSelectedEventsJob().ScheduleParallel(state.Dependency);
+            spawnedJobs[1] = new ResetHealthEventsJob().ScheduleParallel(state.Dependency);
+            spawnedJobs[2] = new ResetShootAttackEventsJob().ScheduleParallel(state.Dependency);
+            spawnedJobs[3] = new ResetMeleeAttackEventsJob().ScheduleParallel(state.Dependency);
+
+            state.Dependency = JobHandle.CombineDependencies(spawnedJobs);
         }
     }
 
@@ -41,6 +54,16 @@ namespace DotsRTS
         {
             selected.onSelected = false;
             selected.onDeselected = false;
+        }
+    }
+
+    [BurstCompile]
+    [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
+    public partial struct ResetMeleeAttackEventsJob : IJobEntity
+    {
+        public void Execute(ref MeleeAttack attack)
+        {
+            attack.onAttack = false;
         }
     }
 }

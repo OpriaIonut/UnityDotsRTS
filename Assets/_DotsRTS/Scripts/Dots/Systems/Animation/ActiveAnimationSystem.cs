@@ -17,17 +17,35 @@ namespace DotsRTS
         {
             AnimationDataHolder animHolder = SystemAPI.GetSingleton<AnimationDataHolder>();
 
-            foreach(var (anim, materialMesh) in SystemAPI.Query<RefRW<ActiveAnimation>, RefRW<MaterialMeshInfo>>())
+            new ActiveAnimationJob
             {
-                ref AnimationData animData = ref animHolder.animations.Value[(int)anim.ValueRO.activeAnim];
+                animHolder = animHolder,
+                deltaTime = SystemAPI.Time.DeltaTime
+            }.ScheduleParallel();
+        }
+    }
 
-                anim.ValueRW.frameTimer += SystemAPI.Time.DeltaTime;
-                if(anim.ValueRW.frameTimer > animData.frameTimerMax)
+    [BurstCompile]
+    public partial struct ActiveAnimationJob: IJobEntity
+    {
+        public AnimationDataHolder animHolder;
+        public float deltaTime;
+
+        public void Execute(ref ActiveAnimation anim, ref MaterialMeshInfo materialMesh)
+        {
+            ref AnimationData animData = ref animHolder.animations.Value[(int)anim.activeAnim];
+
+            anim.frameTimer += deltaTime;
+            if (anim.frameTimer > animData.frameTimerMax)
+            {
+                anim.frameTimer -= animData.frameTimerMax;
+                anim.frame = (anim.frame + 1) % animData.frameMax;
+
+                materialMesh.Mesh = animData.meshes[anim.frame];
+
+                if (anim.frame == 0 && (anim.activeAnim == AnimationType.SoldierShoot || anim.activeAnim == AnimationType.ZombieAttack))
                 {
-                    anim.ValueRW.frameTimer -= animData.frameTimerMax;
-                    anim.ValueRW.frame = (anim.ValueRW.frame + 1) % animData.frameMax;
-
-                    materialMesh.ValueRW.MeshID = animData.meshes[anim.ValueRW.frame];
+                    anim.activeAnim = AnimationType.None;
                 }
             }
         }

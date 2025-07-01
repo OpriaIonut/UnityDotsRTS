@@ -137,6 +137,14 @@ PrefabInstance:
       propertyPath: targetFaction
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 151546269191894148, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: aimAnim
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 151546269191894148, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: shootAnim
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 3175282231348110193, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: m_Name
       value: SoldierUnit

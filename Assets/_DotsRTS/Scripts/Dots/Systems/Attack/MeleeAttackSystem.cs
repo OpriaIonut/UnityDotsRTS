@@ -69,6 +69,8 @@ namespace DotsRTS
                     RefRW<Health> targetHealth = SystemAPI.GetComponentRW<Health>(target.ValueRO.target);
                     targetHealth.ValueRW.health -= melee.ValueRO.damage;
                     targetHealth.ValueRW.onHealthChanged = true;
+
+                    melee.ValueRW.onAttack = true;
                 }
             }
         }
