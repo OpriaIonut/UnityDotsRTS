@@ -60,5 +60,15 @@ namespace DotsRTS
                 builder.Dispose();
             }
         }
+
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state)
+        {
+            foreach (var animDataHolder in SystemAPI.Query<RefRW<AnimationDataHolder>>())
+            {
+                animDataHolder.ValueRW.animations.Dispose();
+            }
+        }
     }
 }

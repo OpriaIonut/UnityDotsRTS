@@ -9,11 +9,13 @@ namespace DotsRTS
     partial struct ResetEventsSystem : ISystem
     {
         private NativeArray<JobHandle> spawnedJobs;
+        private NativeList<Entity> barrackQueueChangedList;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             spawnedJobs = new NativeArray<JobHandle>(4, Allocator.Persistent);
+            barrackQueueChangedList = new NativeList<Entity>(Allocator.Persistent);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -32,7 +34,7 @@ namespace DotsRTS
             spawnedJobs[2] = new ResetShootAttackEventsJob().ScheduleParallel(state.Dependency);
             spawnedJobs[3] = new ResetMeleeAttackEventsJob().ScheduleParallel(state.Dependency);
 
-            NativeList<Entity> barrackQueueChangedList = new NativeList<Entity>(Allocator.TempJob);
+            barrackQueueChangedList.Clear();
             new ResetBuildingBarracksEventsJob()
             {
                 onUnitQueueChangedEntityList = barrackQueueChangedList.AsParallelWriter()
@@ -41,6 +43,13 @@ namespace DotsRTS
             DotsEventsManager.Instance.TriggerOnBarracksUnitQueueChanged(barrackQueueChangedList);
 
             state.Dependency = JobHandle.CombineDependencies(spawnedJobs);
+        }
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state)
+        {
+            spawnedJobs.Dispose();
+            barrackQueueChangedList.Dispose();
         }
     }
 
