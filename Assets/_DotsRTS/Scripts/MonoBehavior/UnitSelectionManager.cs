@@ -136,7 +136,7 @@ namespace DotsRTS
                 Filter = new CollisionFilter
                 {
                     BelongsTo = ~0u,        //Bitmasks, all bits 1
-                    CollidesWith = 1u << GameAssets.UNITS_LAYER,
+                    CollidesWith = 1u << GameAssets.UNITS_LAYER | 1u << GameAssets.BUILDINGS_LAYER,
                     GroupIndex = 0
                 }
             };
@@ -164,10 +164,10 @@ namespace DotsRTS
 
             if (collision.CastRay(ray, out Unity.Physics.RaycastHit hit))
             {
-                if (entityManager.HasComponent<Unit>(hit.Entity))
+                if (entityManager.HasComponent<Faction>(hit.Entity))
                 {
-                    Unit unit = entityManager.GetComponentData<Unit>(hit.Entity);
-                    if(unit.faction == Faction.Zombie)
+                    Faction unit = entityManager.GetComponentData<Faction>(hit.Entity);
+                    if(unit.faction == FactionType.Zombie)
                     {
                         EntityQuery query = new EntityQueryBuilder(Allocator.Temp).WithAll<Selected>().WithPresent<TargetOverride>().Build(entityManager);
 

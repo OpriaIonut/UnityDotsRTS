@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: -2411745600117257887}
   - component: {fileID: 306142550086160990}
   - component: {fileID: 151546269191894148}
+  - component: {fileID: 5569627773901476800}
   m_Layer: 6
   m_Name: BaseUnit
   m_TagString: Untagged
@@ -240,6 +241,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   idleAnim: 1
   walkAnim: 2
+  aimAnim: 0
+  shootAnim: 0
+  meleeAnim: 0
+--- !u!114 &5569627773901476800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3175282231348110193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecac5449411a8114ebefe9b686e5ea5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  faction: 0
 --- !u!1 &6956788086923076770
 GameObject:
   m_ObjectHideFlags: 0

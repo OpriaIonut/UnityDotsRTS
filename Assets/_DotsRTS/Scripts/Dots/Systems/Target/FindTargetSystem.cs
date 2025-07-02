@@ -20,7 +20,7 @@ namespace DotsRTS
             CollisionFilter filter = new CollisionFilter
             {
                 BelongsTo = ~0u,        //Bitmasks, all bits 1
-                CollidesWith = 1u << GameAssets.UNITS_LAYER,
+                CollidesWith = 1u << GameAssets.UNITS_LAYER | 1u << GameAssets.BUILDINGS_LAYER,
                 GroupIndex = 0
             };
 
@@ -57,7 +57,7 @@ namespace DotsRTS
                 {
                     foreach (DistanceHit hit in distanceHits)
                     {
-                        Unit unit = SystemAPI.GetComponent<Unit>(hit.Entity);
+                        Faction unit = SystemAPI.GetComponent<Faction>(hit.Entity);
                         if (findTarget.ValueRO.targetFaction == unit.faction)
                         {
                             if (closestTarget == Entity.Null)

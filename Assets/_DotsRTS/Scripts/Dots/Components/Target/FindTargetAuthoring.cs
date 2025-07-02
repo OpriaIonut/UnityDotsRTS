@@ -6,7 +6,7 @@ namespace DotsRTS
     public struct FindTarget : IComponentData
     {
         public float range;
-        public Faction targetFaction;
+        public FactionType targetFaction;
 
         public float timer;
         public float timerMax;
@@ -16,7 +16,7 @@ namespace DotsRTS
     {
         public float range;
         public float timerMax;
-        public Faction targetFaction;
+        public FactionType targetFaction;
 
         class FindTargetAuthoringBaker : Baker<FindTargetAuthoring>
         {

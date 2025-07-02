@@ -23,7 +23,19 @@ namespace DotsRTS
                 if (target.ValueRO.target == Entity.Null)
                     continue;
 
-                if (RotateTowardsTarget(ref state, transf, mover, target, attack.ValueRO.attackDistance))
+                RotateTowardsTarget(ref state, transf, mover, target, attack.ValueRO.attackDistance);
+            }
+
+            foreach (var (transf, attack, target, myEntity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<ShootAttack>, RefRO<Target>>().WithEntityAccess())
+            {
+                if (target.ValueRO.target == Entity.Null)
+                    continue;
+
+                LocalTransform targetTransf = SystemAPI.GetComponent<LocalTransform>(target.ValueRO.target);
+                if (math.distance(transf.ValueRO.Position, targetTransf.Position) > attack.ValueRO.attackDistance)
+                    continue;
+
+                if (SystemAPI.HasComponent<MoveOverride>(myEntity) && SystemAPI.IsComponentEnabled<MoveOverride>(myEntity))
                     continue;
 
                 //Run logic only once in a while
@@ -60,10 +72,13 @@ namespace DotsRTS
 
         private void ShootBullet(ref SystemState state, EntitiesReferences references, float3 pos, int damage, Entity target, Entity myEntity)
         {
-            RefRW<TargetOverride> enemyTargetOverride = SystemAPI.GetComponentRW<TargetOverride>(target);
-            if(enemyTargetOverride.ValueRO.target == Entity.Null)
+            if (SystemAPI.HasComponent<TargetOverride>(target))
             {
-                enemyTargetOverride.ValueRW.target = myEntity;
+                RefRW<TargetOverride> enemyTargetOverride = SystemAPI.GetComponentRW<TargetOverride>(target);
+                if (enemyTargetOverride.ValueRO.target == Entity.Null)
+                {
+                    enemyTargetOverride.ValueRW.target = myEntity;
+                }
             }
 
             Entity bulletEntity = state.EntityManager.Instantiate(references.bulletEntity);

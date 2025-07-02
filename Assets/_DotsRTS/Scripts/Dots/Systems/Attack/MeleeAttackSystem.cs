@@ -30,6 +30,7 @@ namespace DotsRTS
                 if (!isCloseEnough)
                 {
                     float3 dirToTarget = targetTransf.Position - transf.ValueRO.Position;
+                    dirToTarget = math.normalize(dirToTarget);
                     float distExtraForRaycast = 0.4f;
 
                     RaycastInput raycast = new RaycastInput

@@ -149,6 +149,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SoldierUnit
       objectReference: {fileID: 0}
+    - target: {fileID: 5569627773901476800, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: faction
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6491044957882126766, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
