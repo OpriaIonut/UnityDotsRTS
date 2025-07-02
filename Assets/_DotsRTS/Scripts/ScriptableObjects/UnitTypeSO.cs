@@ -16,6 +16,7 @@ namespace DotsRTS
     {
         public UnitType unitType;
         public float spawnDuration;
+        public Sprite sprite;
 
         public Entity GetPrefabEntity(EntitiesReferences entities)
         {

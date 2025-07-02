@@ -8,6 +8,7 @@ using Unity.Transforms;
 using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using static UnityEditor.PlayerSettings;
 
 namespace DotsRTS
@@ -16,6 +17,7 @@ namespace DotsRTS
     {
         public UnityAction OnSelectionAreaStart;
         public UnityAction OnSelectionAreaEnd;
+        public UnityAction OnSelectedEntitiesChanged;
 
         [SerializeField] private float multipleSelectionRectPixelThreshold = 40f;
         [SerializeField] private float multiplePositionRingSize = 2.2f;
@@ -43,6 +45,9 @@ namespace DotsRTS
 
         private void Update()
         {
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
             if (Input.GetMouseButtonDown(0))
             {
                 selectionStartPos = Input.mousePosition;
@@ -63,6 +68,7 @@ namespace DotsRTS
                     SelectSingleUnit();
 
                 OnSelectionAreaEnd?.Invoke();
+                OnSelectedEntitiesChanged?.Invoke();
             }
             if (Input.GetMouseButtonDown(1))
             {
