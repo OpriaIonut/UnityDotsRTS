@@ -8,6 +8,7 @@ namespace DotsRTS
         public const int BUILDINGS_LAYER = 7;
 
         public UnitTypeListSO unitTypeList;
+        public BuildingTypeListSO buildingTypeList;
 
         #region Singleton
         public static GameAssets Instance { get; private set; }

@@ -48,6 +48,9 @@ namespace DotsRTS
             if (EventSystem.current.IsPointerOverGameObject())
                 return;
 
+            if (BuildingPlacementManager.Instance.GetActiveBuildingTypeSO().buildingType == BuildingType.None)
+                return;
+
             if (Input.GetMouseButtonDown(0))
             {
                 selectionStartPos = Input.mousePosition;

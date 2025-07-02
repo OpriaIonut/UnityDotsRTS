@@ -12,4 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de4a62e3281f233479fcea6f6f1400d9, type: 3}
   m_Name: Barracks
   m_EditorClassIdentifier: 
-  buildingType: 1
+  buildingType: 3
+  prefab: {fileID: 7873677628118108661, guid: d5a056383da0b574dbf0cfa8b3e423ab, type: 3}
+  buildingDistanceMin: 0
+  showInPlacementUI: 1
+  sprite: {fileID: 21300000, guid: 52e75afc67cb28d49a06a0a1fc191cb5, type: 3}
+  visualPrefab: {fileID: 17119538242672499, guid: d5f97a2fd6630b34982aaca8876d69ef, type: 3}
