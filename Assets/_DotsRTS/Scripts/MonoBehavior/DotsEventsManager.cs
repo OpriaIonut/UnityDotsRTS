@@ -9,6 +9,7 @@ namespace DotsRTS
     public class DotsEventsManager : MonoBehaviour
     {
         public event EventHandler OnBarracksQueueChanged;
+        public UnityAction OnHQDead;
 
         #region Singleton
         public static DotsEventsManager Instance { get; private set; }
@@ -30,6 +31,11 @@ namespace DotsRTS
             {
                 OnBarracksQueueChanged?.Invoke(entity, EventArgs.Empty);
             }
+        }
+
+        public void TriggerOnHQDead()
+        {
+            OnHQDead?.Invoke();
         }
     }
 }

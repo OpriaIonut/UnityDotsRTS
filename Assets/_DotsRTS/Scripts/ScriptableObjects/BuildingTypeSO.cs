@@ -8,7 +8,8 @@ namespace DotsRTS
         None,
         ZombieSpawner,
         Tower,
-        Barracks
+        Barracks,
+        HQ
     }
 
     [CreateAssetMenu(fileName = "BuildingTypeSO", menuName = "Scriptable Objects/BuildingTypeSO")]

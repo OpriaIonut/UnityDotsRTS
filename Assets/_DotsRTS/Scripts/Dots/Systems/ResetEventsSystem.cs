@@ -18,6 +18,15 @@ namespace DotsRTS
 
         public void OnUpdate(ref SystemState state)
         {
+            if(SystemAPI.HasSingleton<BuildingHQ>())
+            {
+                Health health = SystemAPI.GetComponent<Health>(SystemAPI.GetSingletonEntity<BuildingHQ>());
+                if(health.onDead)
+                {
+                    DotsEventsManager.Instance.TriggerOnHQDead();
+                }
+            }
+
             spawnedJobs[0] = new ResetSelectedEventsJob().ScheduleParallel(state.Dependency);
             spawnedJobs[1] = new ResetHealthEventsJob().ScheduleParallel(state.Dependency);
             spawnedJobs[2] = new ResetShootAttackEventsJob().ScheduleParallel(state.Dependency);
@@ -41,6 +50,7 @@ namespace DotsRTS
         public void Execute(ref Health health)
         {
             health.onHealthChanged = false;
+            health.onDead = false;
         }
     }
 

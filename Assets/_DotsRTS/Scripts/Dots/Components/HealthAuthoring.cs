@@ -8,6 +8,7 @@ namespace DotsRTS
         public int health;
         public int healthMax;
         public bool onHealthChanged;
+        public bool onDead;
     }
 
     class HealthAuthoring : MonoBehaviour
