@@ -71,6 +71,7 @@ namespace DotsRTS
 
                 Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
                 MoveSelectedUnitsToPosition(mouseWorldPos);
+                HandleBarracksRallyPosition(mouseWorldPos);
             }
         }
 
@@ -148,7 +149,7 @@ namespace DotsRTS
 
             if (collision.CastRay(ray, out Unity.Physics.RaycastHit hit))
             {
-                if (entityManager.HasComponent<Unit>(hit.Entity) && entityManager.HasComponent<Selected>(hit.Entity))
+                if (entityManager.HasComponent<Selected>(hit.Entity))
                 {
                     entityManager.SetComponentEnabled<Selected>(hit.Entity, true);
                     Selected selected = entityManager.GetComponentData<Selected>(hit.Entity);
@@ -211,6 +212,22 @@ namespace DotsRTS
             }
             query.CopyFromComponentDataArray(moveOverride);
             query.CopyFromComponentDataArray(targetOverrides);
+        }
+
+        private void HandleBarracksRallyPosition(Vector3 pos)
+        {
+            EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            EntityQuery query = new EntityQueryBuilder(Allocator.Temp).WithAll<Selected, BuildingBarracks, LocalTransform>().Build(entityManager);
+
+            NativeArray<BuildingBarracks> barracks = query.ToComponentDataArray<BuildingBarracks>(Allocator.Temp);
+            NativeArray<LocalTransform> transforms = query.ToComponentDataArray<LocalTransform>(Allocator.Temp);
+            for (int index = 0; index < barracks.Length; ++index)
+            {
+                BuildingBarracks barrack = barracks[index];
+                barrack.rallyPositionOffset = (float3)pos - transforms[index].Position;
+                barracks[index] = barrack;
+            }
+            query.CopyFromComponentDataArray(barracks);
         }
 
         private NativeArray<float3> GenerateMovePositionArray(float3 targetPos, int positionCount)

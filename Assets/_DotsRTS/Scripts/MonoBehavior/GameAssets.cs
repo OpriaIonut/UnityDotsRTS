@@ -7,6 +7,8 @@ namespace DotsRTS
         public const int UNITS_LAYER = 6;
         public const int BUILDINGS_LAYER = 7;
 
+        public UnitTypeListSO unitTypeList;
+
         #region Singleton
         public static GameAssets Instance { get; private set; }
         private void Awake()

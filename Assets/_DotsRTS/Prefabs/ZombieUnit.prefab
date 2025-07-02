@@ -63,6 +63,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ZombieUnit
       objectReference: {fileID: 0}
+    - target: {fileID: 4735002621768524306, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: unitType
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 5569627773901476800, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: faction
       value: 1

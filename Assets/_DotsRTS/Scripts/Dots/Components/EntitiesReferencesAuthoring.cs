@@ -8,6 +8,8 @@ namespace DotsRTS
         public Entity bulletEntity;
         public Entity zombiePrefab;
         public Entity shootLightPrefab;
+        public Entity scoutPrefab;
+        public Entity soldierPrefab;
     }
 
     class EntitiesReferencesAuthoring : MonoBehaviour
@@ -15,6 +17,8 @@ namespace DotsRTS
         public GameObject bulletPrefab;
         public GameObject zombiePrefab;
         public GameObject shootLightPrefab;
+        public GameObject scoutPrefab;
+        public GameObject soldierPrefab;
 
         class EntitiesReferencesAuthoringBaker : Baker<EntitiesReferencesAuthoring>
         {
@@ -26,6 +30,8 @@ namespace DotsRTS
                     bulletEntity = GetEntity(authoring.bulletPrefab, TransformUsageFlags.Dynamic),
                     zombiePrefab = GetEntity(authoring.zombiePrefab, TransformUsageFlags.Dynamic),
                     shootLightPrefab = GetEntity(authoring.shootLightPrefab, TransformUsageFlags.Dynamic),
+                    scoutPrefab = GetEntity(authoring.scoutPrefab, TransformUsageFlags.Dynamic),
+                    soldierPrefab = GetEntity(authoring.soldierPrefab, TransformUsageFlags.Dynamic),
                 });
             }
         }
