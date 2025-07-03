@@ -84,7 +84,7 @@ namespace DotsRTS
             var filter = new CollisionFilter
             {
                 BelongsTo = ~0u,        //Bitmasks, all bits 1
-                CollidesWith = 1u << GameAssets.BUILDINGS_LAYER,
+                CollidesWith = 1u << GameAssets.BUILDINGS_LAYER | 1u << GameAssets.RESOURCE_LAYER,
                 GroupIndex = 0
             };
 
@@ -109,6 +109,30 @@ namespace DotsRTS
                     }
                 }
             }
+
+            if (buildingType is BuildingResourceHarvesterTypeSO harvesterSO)
+            {
+                bool hasNearbyResource = false;
+                distanceList.Clear();
+                if (collision.OverlapSphere(pos, harvesterSO.harvestDistance, ref distanceList, filter))
+                {
+                    foreach (var hit in distanceList)
+                    {
+                        if (entityManager.HasComponent<ResourceTypeSOHolder>(hit.Entity))
+                        {
+                            var holder = entityManager.GetComponentData<ResourceTypeSOHolder>(hit.Entity);
+                            if (holder.resourceType == harvesterSO.resourceType)
+                            {
+                                hasNearbyResource = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!hasNearbyResource)
+                    return false;
+            }
+
             return true;
         }
 

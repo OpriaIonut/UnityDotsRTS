@@ -13,6 +13,9 @@ namespace DotsRTS
 
         public Entity buildingTowerPrefab;
         public Entity buildingBarracksPrefab;
+        public Entity buildingHarvesterGold;
+        public Entity buildingHarvesterIron;
+        public Entity buildingHarvesterOil;
     }
 
     class EntitiesReferencesAuthoring : MonoBehaviour
@@ -24,6 +27,9 @@ namespace DotsRTS
         public GameObject soldierPrefab;
         public GameObject buildingTowerPrefab;
         public GameObject buildingBarracksPrefab;
+        public GameObject buildingHarvesterGold;
+        public GameObject buildingHarvesterIron;
+        public GameObject buildingHarvesterOil;
 
         class EntitiesReferencesAuthoringBaker : Baker<EntitiesReferencesAuthoring>
         {
@@ -39,6 +45,9 @@ namespace DotsRTS
                     soldierPrefab = GetEntity(authoring.soldierPrefab, TransformUsageFlags.Dynamic),
                     buildingTowerPrefab = GetEntity(authoring.buildingTowerPrefab, TransformUsageFlags.Dynamic),
                     buildingBarracksPrefab = GetEntity(authoring.buildingBarracksPrefab, TransformUsageFlags.Dynamic),
+                    buildingHarvesterGold = GetEntity(authoring.buildingHarvesterGold, TransformUsageFlags.Dynamic),
+                    buildingHarvesterIron = GetEntity(authoring.buildingHarvesterIron, TransformUsageFlags.Dynamic),
+                    buildingHarvesterOil = GetEntity(authoring.buildingHarvesterOil, TransformUsageFlags.Dynamic),
                 });
             }
         }

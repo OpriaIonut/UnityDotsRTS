@@ -9,7 +9,10 @@ namespace DotsRTS
         ZombieSpawner,
         Tower,
         Barracks,
-        HQ
+        HQ,
+        GoldHarvester,
+        IronHarvester,
+        OilHarvester
     }
 
     [CreateAssetMenu(fileName = "BuildingTypeSO", menuName = "Scriptable Objects/BuildingTypeSO")]
@@ -31,6 +34,9 @@ namespace DotsRTS
                 case BuildingType.None:
                 case BuildingType.Tower: return entities.buildingTowerPrefab;
                 case BuildingType.Barracks: return entities.buildingBarracksPrefab;
+                case BuildingType.GoldHarvester: return entities.buildingHarvesterGold;
+                case BuildingType.IronHarvester: return entities.buildingHarvesterIron;
+                case BuildingType.OilHarvester: return entities.buildingHarvesterOil;
             }
         }
     }
