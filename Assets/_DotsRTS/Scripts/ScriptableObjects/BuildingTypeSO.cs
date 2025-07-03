@@ -21,6 +21,8 @@ namespace DotsRTS
         public BuildingType buildingType;
         public GameObject prefab;
         public float buildingDistanceMin;
+        public float buildingDuration;
+        public float constructionYOffset;
         public bool showInPlacementUI;
         public Sprite sprite;
         public Transform visualPrefab;
@@ -37,6 +39,20 @@ namespace DotsRTS
                 case BuildingType.GoldHarvester: return entities.buildingHarvesterGold;
                 case BuildingType.IronHarvester: return entities.buildingHarvesterIron;
                 case BuildingType.OilHarvester: return entities.buildingHarvesterOil;
+            }
+        }
+
+        public Entity GetVisualPrefabEntity(EntitiesReferences entities)
+        {
+            switch (buildingType)
+            {
+                default:
+                case BuildingType.None:
+                case BuildingType.Tower: return entities.buildingTowerPrefabVisual;
+                case BuildingType.Barracks: return entities.buildingBarracksPrefabVisual;
+                case BuildingType.GoldHarvester: return entities.buildingHarvesterGoldVisual;
+                case BuildingType.IronHarvester: return entities.buildingHarvesterIronVisual;
+                case BuildingType.OilHarvester: return entities.buildingHarvesterOilVisual;
             }
         }
     }

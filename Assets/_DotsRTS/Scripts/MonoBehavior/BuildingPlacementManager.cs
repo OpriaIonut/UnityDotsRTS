@@ -60,7 +60,6 @@ namespace DotsRTS
             {
                 if (ResourceManager.Instance.CanSpendResourceAmount(buildingType.buildCosts))
                 {
-
                     Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
                     if (CanPlaceBuilding(mouseWorldPos))
                     {
@@ -70,9 +69,27 @@ namespace DotsRTS
                         var query = entityManager.CreateEntityQuery(typeof(EntitiesReferences));
                         EntitiesReferences references = query.GetSingleton<EntitiesReferences>();
 
-                        Entity prefab = buildingType.GetPrefabEntity(references);
+                        //Entity prefab = buildingType.GetPrefabEntity(references);
+                        //Entity clone = entityManager.Instantiate(prefab);
+                        //entityManager.SetComponentData(clone, LocalTransform.FromPosition(mouseWorldPos));
+
+                        Entity visualPrefab = buildingType.GetVisualPrefabEntity(references);
+                        Entity visualClone = entityManager.Instantiate(visualPrefab);
+                        entityManager.SetComponentData(visualClone, LocalTransform.FromPosition(mouseWorldPos + new Vector3(0, buildingType.constructionYOffset, 0)));
+
+                        Entity prefab = references.buildingConstructionPrefab;
                         Entity clone = entityManager.Instantiate(prefab);
                         entityManager.SetComponentData(clone, LocalTransform.FromPosition(mouseWorldPos));
+                        entityManager.SetComponentData(clone, new BuildingConstruction
+                        {
+                            buildingType = buildingType.buildingType,
+                            constructionTimer = 0f,
+                            constructionTimerMax = buildingType.buildingDuration,
+                            finalPrefab = buildingType.GetPrefabEntity(references),
+                            visual = visualClone,
+                            endPos = mouseWorldPos,
+                            startPos = mouseWorldPos + new Vector3(0, buildingType.constructionYOffset, 0)
+                        });
                     }
                 }
             }
@@ -110,6 +127,12 @@ namespace DotsRTS
                     if(entityManager.HasComponent<BuildingTypeSOHolder>(hit.Entity))
                     {
                         var holder = entityManager.GetComponentData<BuildingTypeSOHolder>(hit.Entity);
+                        if (holder.buildingType == buildingType.buildingType)
+                            return false;
+                    }
+                    if (entityManager.HasComponent<BuildingConstruction>(hit.Entity))
+                    {
+                        var holder = entityManager.GetComponentData<BuildingConstruction>(hit.Entity);
                         if (holder.buildingType == buildingType.buildingType)
                             return false;
                     }

@@ -16,6 +16,14 @@ namespace DotsRTS
         public Entity buildingHarvesterGold;
         public Entity buildingHarvesterIron;
         public Entity buildingHarvesterOil;
+
+        public Entity buildingTowerPrefabVisual;
+        public Entity buildingBarracksPrefabVisual;
+        public Entity buildingHarvesterGoldVisual;
+        public Entity buildingHarvesterIronVisual;
+        public Entity buildingHarvesterOilVisual;
+
+        public Entity buildingConstructionPrefab;
     }
 
     class EntitiesReferencesAuthoring : MonoBehaviour
@@ -25,11 +33,20 @@ namespace DotsRTS
         public GameObject shootLightPrefab;
         public GameObject scoutPrefab;
         public GameObject soldierPrefab;
+
         public GameObject buildingTowerPrefab;
         public GameObject buildingBarracksPrefab;
         public GameObject buildingHarvesterGold;
         public GameObject buildingHarvesterIron;
         public GameObject buildingHarvesterOil;
+
+        public GameObject buildingTowerPrefabVisual;
+        public GameObject buildingBarracksPrefabVisual;
+        public GameObject buildingHarvesterGoldVisual;
+        public GameObject buildingHarvesterIronVisual;
+        public GameObject buildingHarvesterOilVisual;
+
+        public GameObject buildingConstructionPrefab;
 
         class EntitiesReferencesAuthoringBaker : Baker<EntitiesReferencesAuthoring>
         {
@@ -48,6 +65,12 @@ namespace DotsRTS
                     buildingHarvesterGold = GetEntity(authoring.buildingHarvesterGold, TransformUsageFlags.Dynamic),
                     buildingHarvesterIron = GetEntity(authoring.buildingHarvesterIron, TransformUsageFlags.Dynamic),
                     buildingHarvesterOil = GetEntity(authoring.buildingHarvesterOil, TransformUsageFlags.Dynamic),
+                    buildingTowerPrefabVisual = GetEntity(authoring.buildingTowerPrefabVisual, TransformUsageFlags.Dynamic),
+                    buildingBarracksPrefabVisual = GetEntity(authoring.buildingBarracksPrefabVisual, TransformUsageFlags.Dynamic),
+                    buildingHarvesterGoldVisual = GetEntity(authoring.buildingHarvesterGoldVisual, TransformUsageFlags.Dynamic),
+                    buildingHarvesterIronVisual = GetEntity(authoring.buildingHarvesterIronVisual, TransformUsageFlags.Dynamic),
+                    buildingHarvesterOilVisual = GetEntity(authoring.buildingHarvesterOilVisual, TransformUsageFlags.Dynamic),
+                    buildingConstructionPrefab = GetEntity(authoring.buildingConstructionPrefab, TransformUsageFlags.Dynamic),
                 });
             }
         }

@@ -18,6 +18,12 @@ namespace DotsRTS
                 {
                     health.ValueRW.onDead = true;
                     buffer.DestroyEntity(entity);
+
+                    if(SystemAPI.HasComponent<BuildingConstruction>(entity))
+                    {
+                        var construction = SystemAPI.GetComponent<BuildingConstruction>(entity);
+                        buffer.DestroyEntity(construction.visual);
+                    }
                 }
             }
         }

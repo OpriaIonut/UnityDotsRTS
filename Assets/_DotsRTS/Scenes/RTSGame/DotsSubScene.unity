@@ -261,6 +261,12 @@ MonoBehaviour:
   buildingHarvesterGold: {fileID: 9092284830765299770, guid: 31233f5d3c084464d8a7f1eb3ee7cb4f, type: 3}
   buildingHarvesterIron: {fileID: 9075387724484191401, guid: 6a7ece0826cb6e4459bd719e3c2a47a7, type: 3}
   buildingHarvesterOil: {fileID: 4357334598479409127, guid: 3d285cd5f6eac134a850e00b8fe33b43, type: 3}
+  buildingTowerPrefabVisual: {fileID: 5799947214760584452, guid: 4dbe3453c2a716743b0db56f6ced9c3b, type: 3}
+  buildingBarracksPrefabVisual: {fileID: 715989064538214012, guid: d5f97a2fd6630b34982aaca8876d69ef, type: 3}
+  buildingHarvesterGoldVisual: {fileID: 4499998760003975059, guid: d92e1b4fc516b61468081516cc5c14f1, type: 3}
+  buildingHarvesterIronVisual: {fileID: 184314028090552627, guid: 986eac81f4856df47bacc9ed8bf0ea6d, type: 3}
+  buildingHarvesterOilVisual: {fileID: 4785703203425898357, guid: 2e71adb493af6ac46980b7cb9775dd45, type: 3}
+  buildingConstructionPrefab: {fileID: 8123063683911770920, guid: 35f88d17c20e1194288a35d5085bce94, type: 3}
 --- !u!4 &1367767003
 Transform:
   m_ObjectHideFlags: 0
@@ -456,7 +462,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1092705399276593934, guid: b1eea720b32baaf458c8212c673a6377, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4604070206097476903, guid: b1eea720b32baaf458c8212c673a6377, type: 3}
       propertyPath: m_LocalPosition.x
@@ -521,7 +527,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6124250435364868605, guid: c9beddf3a0f3abe4eae07de55b5f82d7, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7361223728276161507, guid: c9beddf3a0f3abe4eae07de55b5f82d7, type: 3}
       propertyPath: m_LocalPosition.x
