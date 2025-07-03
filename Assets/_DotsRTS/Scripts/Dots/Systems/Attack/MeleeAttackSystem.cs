@@ -37,7 +37,12 @@ namespace DotsRTS
                     {
                         Start = transf.ValueRO.Position,
                         End = transf.ValueRO.Position + dirToTarget * (melee.ValueRO.colliderSize + distExtraForRaycast),
-                        Filter = CollisionFilter.Default,
+                        Filter = new CollisionFilter
+                        {
+                            BelongsTo = ~0u,
+                            CollidesWith = 1u << GameAssets.UNITS_LAYER | 1u << GameAssets.BUILDINGS_LAYER,
+                            GroupIndex = 0
+                        },
                     };
 
                     hitList.Clear();
