@@ -24,7 +24,7 @@ namespace DotsRTS
         public bool showInPlacementUI;
         public Sprite sprite;
         public Transform visualPrefab;
-
+        public ResourceAmount[] buildCosts;
 
         public Entity GetPrefabEntity(EntitiesReferences entities)
         {

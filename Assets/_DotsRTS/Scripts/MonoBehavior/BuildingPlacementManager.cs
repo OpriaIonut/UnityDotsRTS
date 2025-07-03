@@ -58,16 +58,22 @@ namespace DotsRTS
 
             if(Input.GetMouseButtonDown(0))
             {
-                Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
-                if (CanPlaceBuilding(mouseWorldPos))
+                if (ResourceManager.Instance.CanSpendResourceAmount(buildingType.buildCosts))
                 {
-                    EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-                    var query = entityManager.CreateEntityQuery(typeof(EntitiesReferences));
-                    EntitiesReferences references = query.GetSingleton<EntitiesReferences>();
 
-                    Entity prefab = buildingType.GetPrefabEntity(references);
-                    Entity clone = entityManager.Instantiate(prefab);
-                    entityManager.SetComponentData(clone, LocalTransform.FromPosition(mouseWorldPos));
+                    Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
+                    if (CanPlaceBuilding(mouseWorldPos))
+                    {
+                        ResourceManager.Instance.SpendResourceAmount(buildingType.buildCosts);
+
+                        EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+                        var query = entityManager.CreateEntityQuery(typeof(EntitiesReferences));
+                        EntitiesReferences references = query.GetSingleton<EntitiesReferences>();
+
+                        Entity prefab = buildingType.GetPrefabEntity(references);
+                        Entity clone = entityManager.Instantiate(prefab);
+                        entityManager.SetComponentData(clone, LocalTransform.FromPosition(mouseWorldPos));
+                    }
                 }
             }
         }

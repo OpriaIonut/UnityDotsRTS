@@ -15,3 +15,6 @@ MonoBehaviour:
   unitType: 2
   spawnDuration: 1
   sprite: {fileID: 21300000, guid: 7e5af9f6e92c6974baebe192ce185e5e, type: 3}
+  spawnCost:
+  - resourceType: 1
+    amount: 5

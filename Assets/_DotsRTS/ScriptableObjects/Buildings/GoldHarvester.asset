@@ -18,5 +18,8 @@ MonoBehaviour:
   showInPlacementUI: 1
   sprite: {fileID: 21300000, guid: 8fe1774abab81cf42b56f4366489453b, type: 3}
   visualPrefab: {fileID: 6489063184693368259, guid: d92e1b4fc516b61468081516cc5c14f1, type: 3}
+  buildCosts:
+  - resourceType: 1
+    amount: 20
   resourceType: 2
   harvestDistance: 7

@@ -104,6 +104,11 @@ namespace DotsRTS
 
         private void SpawnUnit(UnitType unitType)
         {
+            var unitData = GameAssets.Instance.unitTypeList.GetUnitDataSO(unitType);
+            if (!ResourceManager.Instance.CanSpendResourceAmount(unitData.spawnCost))
+                return;
+
+            ResourceManager.Instance.SpendResourceAmount(unitData.spawnCost);
             entityManager.SetComponentData(buildingBarracks, new BuildingBarracksUnitEnqueue
             {
                 unitType = unitType

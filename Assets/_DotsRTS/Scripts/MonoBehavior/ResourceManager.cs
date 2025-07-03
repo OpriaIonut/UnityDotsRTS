@@ -29,6 +29,9 @@ namespace DotsRTS
             {
                 resources[res.resourceType] = 0;
             }
+            AddResourceAmount(ResourceType.Gold, 50);
+            AddResourceAmount(ResourceType.Iron, 50);
+            AddResourceAmount(ResourceType.Oil, 50);
         }
         #endregion
 
@@ -41,6 +44,34 @@ namespace DotsRTS
         public int GetResourceAmount(ResourceType res)
         {
             return resources[res];
+        }
+
+        public bool CanSpendResourceAmount(ResourceAmount amount)
+        {
+            return resources[amount.resourceType] >= amount.amount;
+        }
+        public bool CanSpendResourceAmount(ResourceAmount[] amount)
+        {
+            foreach(var item in amount)
+            {
+                if (resources[item.resourceType] < item.amount)
+                    return false;
+            }
+            return true;
+        }
+
+        public void SpendResourceAmount(ResourceAmount res)
+        {
+            resources[res.resourceType] -= res.amount;
+            OnResourceChanged?.Invoke();
+        }
+        public void SpendResourceAmount(ResourceAmount[] res)
+        {
+            foreach (var item in res)
+            {
+                resources[item.resourceType] -= item.amount;
+            }
+            OnResourceChanged?.Invoke();
         }
     }
 }
