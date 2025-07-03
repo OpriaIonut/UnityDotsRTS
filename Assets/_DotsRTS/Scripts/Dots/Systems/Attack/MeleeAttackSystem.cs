@@ -17,7 +17,7 @@ namespace DotsRTS
 
             NativeList<RaycastHit> hitList = new NativeList<RaycastHit>(Allocator.Temp);
 
-            foreach(var (transf, melee, target, mover) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<MeleeAttack>, RefRO<Target>, RefRW<UnitMover>>().WithDisabled<MoveOverride>())
+            foreach(var (transf, melee, target, pathQueue, enabledPathQueue) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<MeleeAttack>, RefRO<Target>, RefRW<TargetPositionPathQueue>, EnabledRefRW<TargetPositionPathQueue>>().WithDisabled<MoveOverride>().WithPresent<TargetPositionPathQueue>())
             {
                 if (target.ValueRO.target == Entity.Null)
                     continue;
@@ -56,11 +56,13 @@ namespace DotsRTS
 
                 if (!isCloseEnough && !isTouchingTarget)
                 {
-                    mover.ValueRW.targetPosition = targetTransf.Position;
+                    pathQueue.ValueRW.targetPos = targetTransf.Position;
+                    enabledPathQueue.ValueRW = true;
                 }
                 else
                 {
-                    mover.ValueRW.targetPosition = transf.ValueRO.Position;
+                    pathQueue.ValueRW.targetPos = transf.ValueRO.Position;
+                    enabledPathQueue.ValueRW = true;
 
                     melee.ValueRW.timer -= SystemAPI.Time.DeltaTime;
                     if (melee.ValueRO.timer > 0)

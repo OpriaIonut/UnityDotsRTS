@@ -18,12 +18,12 @@ namespace DotsRTS
         {
             EntitiesReferences references = SystemAPI.GetSingleton<EntitiesReferences>();
 
-            foreach(var (transf, attack, target, mover, myEntity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<ShootAttack>, RefRO<Target>, RefRW<UnitMover>>().WithDisabled<MoveOverride>().WithEntityAccess())
+            foreach(var (transf, attack, target, mover, pathQueue, enabledPathQueue, myEntity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<ShootAttack>, RefRO<Target>, RefRW<UnitMover>, RefRW<TargetPositionPathQueue>, EnabledRefRW<TargetPositionPathQueue>>().WithDisabled<MoveOverride>().WithPresent<TargetPositionPathQueue>().WithEntityAccess())
             {
                 if (target.ValueRO.target == Entity.Null)
                     continue;
 
-                RotateTowardsTarget(ref state, transf, mover, target, attack.ValueRO.attackDistance);
+                RotateTowardsTarget(ref state, transf, mover, pathQueue, enabledPathQueue, target, attack.ValueRO.attackDistance);
             }
 
             foreach (var (transf, attack, target, myEntity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<ShootAttack>, RefRO<Target>>().WithEntityAccess())
@@ -50,17 +50,19 @@ namespace DotsRTS
             }
         }
 
-        private bool RotateTowardsTarget(ref SystemState state, RefRW<LocalTransform> transf, RefRW<UnitMover> mover, RefRO<Target> target, float attackDistance)
+        private bool RotateTowardsTarget(ref SystemState state, RefRW<LocalTransform> transf, RefRW<UnitMover> mover, RefRW<TargetPositionPathQueue> pathQueue, EnabledRefRW<TargetPositionPathQueue> enabledPathQueue, RefRO<Target> target, float attackDistance)
         {
             var targetTransf = SystemAPI.GetComponent<LocalTransform>(target.ValueRO.target);
             if (math.distance(transf.ValueRO.Position, targetTransf.Position) > attackDistance)
             {
-                mover.ValueRW.targetPosition = targetTransf.Position;
+                pathQueue.ValueRW.targetPos = targetTransf.Position;
+                enabledPathQueue.ValueRW = true;
                 return true;
             }
             else
             {
-                mover.ValueRW.targetPosition = transf.ValueRO.Position;
+                pathQueue.ValueRW.targetPos = transf.ValueRO.Position;
+                enabledPathQueue.ValueRW = true;
             }
 
             float3 aimDirection = targetTransf.Position - transf.ValueRO.Position;

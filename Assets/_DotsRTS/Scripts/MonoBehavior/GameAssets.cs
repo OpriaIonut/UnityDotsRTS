@@ -6,6 +6,8 @@ namespace DotsRTS
     {
         public const int UNITS_LAYER = 6;
         public const int BUILDINGS_LAYER = 7;
+        public const int PATHFINDING_WALLS = 8;
+        public const int PATHFINDING_HEAVY = 9;
 
         public UnitTypeListSO unitTypeList;
         public BuildingTypeListSO buildingTypeList;

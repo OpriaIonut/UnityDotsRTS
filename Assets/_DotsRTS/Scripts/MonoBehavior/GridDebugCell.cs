@@ -21,5 +21,16 @@ namespace DotsRTS
         {
             rend.color = col;
         }
+
+        public void SetSprite(Sprite sprite)
+        {
+            rend.sprite = sprite;
+        }
+
+        public void SetSpriteRotation(Quaternion rot)
+        {
+            rend.transform.rotation = rot;
+            rend.transform.rotation *= Quaternion.Euler(90f, 0f, 90f);
+        }
     }
 }

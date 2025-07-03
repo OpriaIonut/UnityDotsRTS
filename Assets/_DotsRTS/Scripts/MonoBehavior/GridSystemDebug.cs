@@ -6,6 +6,8 @@ namespace DotsRTS
     public class GridSystemDebug : MonoBehaviour
     {
         [SerializeField] private Transform debugPrefab;
+        [SerializeField] private Sprite circleSprite;
+        [SerializeField] private Sprite arrowSprite;
 
         private bool isInitialized = false;
         private GridDebugCell[,] debugGrid;
@@ -53,9 +55,30 @@ namespace DotsRTS
                     EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
                     int index = GridSystem.CalculateIndex(x, y, gridSystemData.width);
 
-                    Entity node = gridSystemData.gridMap.gridEntities[index];
+                    int gridIndex = gridSystemData.nextGridIndex - 1;
+                    if (gridIndex < 0)
+                        gridIndex = GridSystem.FLOW_FIELD_MAP_COUNT - 1;
+
+                    Entity node = gridSystemData.gridMap[gridIndex].gridEntities[index];
                     var nodeData = entityManager.GetComponentData<GridSystem.GridNode>(node);
-                    cell.SetColor(nodeData.data == 0 ? Color.white : Color.blue);
+                    //cell.SetColor(nodeData.data == 0 ? Color.white : Color.blue);
+
+                    if (nodeData.cost == 0)
+                    {
+                        cell.SetSprite(circleSprite);
+                        cell.SetColor(Color.green);
+                    }
+                    else if (nodeData.cost == GridSystem.WALL_COST)
+                    {
+                        cell.SetSprite(circleSprite);
+                        cell.SetColor(Color.black);
+                    }
+                    else
+                    {
+                        cell.SetSprite(arrowSprite);
+                        cell.SetColor(Color.white);
+                        cell.SetSpriteRotation(Quaternion.LookRotation(new Vector3(nodeData.vector.x, 0, nodeData.vector.y), Vector3.up));
+                    }
                 }
             }
         }

@@ -1,15 +1,11 @@
-using System;
-using System.Net.NetworkInformation;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using static UnityEditor.PlayerSettings;
 
 namespace DotsRTS
 {
@@ -48,7 +44,7 @@ namespace DotsRTS
             if (EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            if (BuildingPlacementManager.Instance.GetActiveBuildingTypeSO().buildingType == BuildingType.None)
+            if (BuildingPlacementManager.Instance.GetActiveBuildingTypeSO().buildingType != BuildingType.None)
                 return;
 
             if (Input.GetMouseButtonDown(0))
@@ -202,11 +198,12 @@ namespace DotsRTS
         private void MoveSelectedUnitsToPosition(Vector3 pos)
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            EntityQuery query = new EntityQueryBuilder(Allocator.Temp).WithAll<Selected>().WithPresent<MoveOverride, TargetOverride>().Build(entityManager);
+            EntityQuery query = new EntityQueryBuilder(Allocator.Temp).WithAll<Selected>().WithPresent<MoveOverride, TargetOverride, TargetPositionPathQueue, FlowFieldFollower, FlowFieldPathRequest>().Build(entityManager);
 
             NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
             NativeArray<MoveOverride> moveOverride = query.ToComponentDataArray<MoveOverride>(Allocator.Temp);
             NativeArray<TargetOverride> targetOverrides = query.ToComponentDataArray<TargetOverride>(Allocator.Temp);
+            NativeArray<TargetPositionPathQueue> targetPositionQueues = query.ToComponentDataArray<TargetPositionPathQueue>(Allocator.Temp);
             NativeArray<float3> movePositions = GenerateMovePositionArray(pos, entities.Length);
             for (int index = 0; index < moveOverride.Length; ++index)
             {
@@ -218,9 +215,18 @@ namespace DotsRTS
                 TargetOverride targetOverride = targetOverrides[index];
                 targetOverride.target = Entity.Null;
                 targetOverrides[index] = targetOverride;
+
+                TargetPositionPathQueue request = targetPositionQueues[index];
+                request.targetPos = movePositions[index];
+                targetPositionQueues[index] = request;
+                entityManager.SetComponentEnabled<TargetPositionPathQueue>(entities[index], true);
+
+                entityManager.SetComponentEnabled<FlowFieldPathRequest>(entities[index], false);
+                entityManager.SetComponentEnabled<FlowFieldFollower>(entities[index], false);
             }
             query.CopyFromComponentDataArray(moveOverride);
             query.CopyFromComponentDataArray(targetOverrides);
+            query.CopyFromComponentDataArray(targetPositionQueues);
         }
 
         private void HandleBarracksRallyPosition(Vector3 pos)

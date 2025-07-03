@@ -19,11 +19,12 @@ namespace DotsRTS
             Entity entity = SystemAPI.GetSingletonEntity<BuildingHQ>();
             float3 position = SystemAPI.GetComponent<LocalTransform>(entity).Position;
 
-            foreach(var (attack, mover, target) in SystemAPI.Query<RefRO<EnemyAttackHQ>, RefRW<UnitMover>, RefRO<Target>>().WithDisabled<MoveOverride>())
+            foreach(var (attack, pathQueue, enabledPathQueue, target) in SystemAPI.Query<RefRO<EnemyAttackHQ>, RefRW<TargetPositionPathQueue>, EnabledRefRW<TargetPositionPathQueue>, RefRO<Target>>().WithDisabled<MoveOverride>().WithPresent<TargetPositionPathQueue>())
             {
                 if (target.ValueRO.target != Entity.Null)
                     continue;
-                mover.ValueRW.targetPosition = position;
+                pathQueue.ValueRW.targetPos = position;
+                enabledPathQueue.ValueRW = true;
             }
         }
     }

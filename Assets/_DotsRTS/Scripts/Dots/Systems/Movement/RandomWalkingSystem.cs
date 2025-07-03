@@ -18,7 +18,7 @@ namespace DotsRTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (randWalking, mover, transf) in SystemAPI.Query<RefRW<RandomWalking>, RefRW<UnitMover>, RefRO<LocalTransform>>())
+            foreach (var (randWalking, mover, transf, pathQueue, enabledPathQueue) in SystemAPI.Query<RefRW<RandomWalking>, RefRW<UnitMover>, RefRO<LocalTransform>, RefRW<TargetPositionPathQueue>, EnabledRefRW<TargetPositionPathQueue>>().WithPresent<TargetPositionPathQueue>())
             {
                 float dist = math.distancesq(transf.ValueRO.Position, randWalking.ValueRO.targetPos);
                 if(dist <= UnitMoverSystem.REACH_DIST_SQ)
@@ -30,7 +30,8 @@ namespace DotsRTS
                 }
                 else
                 {
-                    mover.ValueRW.targetPosition = randWalking.ValueRO.targetPos;
+                    pathQueue.ValueRW.targetPos = randWalking.ValueRO.targetPos;
+                    enabledPathQueue.ValueRW = true;
                 }
             }
         }
