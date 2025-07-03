@@ -1,10 +1,13 @@
-#define GRID_DEBUG
+//#define GRID_DEBUG
 
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
+using UnityEngine;
+using static DotsRTS.GridSystem;
 
 namespace DotsRTS
 {
@@ -23,10 +26,12 @@ namespace DotsRTS
             public NativeArray<GridMap> gridMap;
             public int nextGridIndex;
             public NativeArray<byte> costMap;
+            public NativeArray<Entity> totalGridMapEntityArray;
         }
 
         public struct GridNode: IComponentData
         {
+            public int gridIndex;
             public int index;
             public int x;
             public int y;
@@ -42,6 +47,8 @@ namespace DotsRTS
             public bool isValid;
         }
 
+        public ComponentLookup<GridNode> gridNodeLookup;
+
 #if !GRID_DEBUG
         [BurstCompile]
 #endif
@@ -56,6 +63,7 @@ namespace DotsRTS
             state.EntityManager.AddComponent<GridNode>(gridNodePrefab);
 
             NativeArray<GridMap> gridMaps = new NativeArray<GridMap>(FLOW_FIELD_MAP_COUNT, Allocator.Persistent);
+            NativeList<Entity> totalGridMapEntities = new NativeList<Entity>(FLOW_FIELD_MAP_COUNT * totalCount, Allocator.Temp);
             for (int i = 0; i < FLOW_FIELD_MAP_COUNT; ++i)
             {
                 GridMap gridMap = new GridMap();
@@ -63,6 +71,8 @@ namespace DotsRTS
                 gridMap.gridEntities = new NativeArray<Entity>(totalCount, Allocator.Persistent);
 
                 state.EntityManager.Instantiate(gridNodePrefab, gridMap.gridEntities);
+                totalGridMapEntities.AddRange(gridMap.gridEntities);
+
                 for (int x = 0; x < width; ++x)
                 {
                     for (int y = 0; y < height; ++y)
@@ -70,6 +80,7 @@ namespace DotsRTS
                         int index = CalculateIndex(x, y, width);
                         GridNode node = new GridNode
                         {
+                            gridIndex = i,
                             index = index,
                             x = x,
                             y = y,
@@ -82,6 +93,7 @@ namespace DotsRTS
                 }
                 gridMaps[i] = gridMap;
             }
+
             state.EntityManager.AddComponent<GridSystemData>(state.SystemHandle);
             state.EntityManager.SetComponentData(state.SystemHandle, new GridSystemData
             {
@@ -89,8 +101,12 @@ namespace DotsRTS
                 height = height,
                 gridNodeSize = gridNodeSize,
                 gridMap = gridMaps,
-                costMap = new NativeArray<byte>(totalCount, Allocator.Persistent)
+                costMap = new NativeArray<byte>(totalCount, Allocator.Persistent),
+                totalGridMapEntityArray = totalGridMapEntities.ToArray(Allocator.Persistent)
             });
+            totalGridMapEntities.Dispose();
+
+            gridNodeLookup = SystemAPI.GetComponentLookup<GridNode>(false);
         }
 
 #if !GRID_DEBUG
@@ -99,6 +115,8 @@ namespace DotsRTS
         public void OnUpdate(ref SystemState state)
         {
             GridSystemData data = SystemAPI.GetComponent<GridSystemData>(state.SystemHandle);
+
+            gridNodeLookup.Update(ref state);
 
             foreach (var (request, enableRequest, follower, enableFollower) in SystemAPI.Query<RefRW<FlowFieldPathRequest>, EnabledRefRW<FlowFieldPathRequest>, RefRW<FlowFieldFollower>, EnabledRefRW<FlowFieldFollower>>().WithPresent<FlowFieldFollower>())
             {
@@ -146,6 +164,7 @@ namespace DotsRTS
                 data.ValueRW.gridMap[i].gridEntities.Dispose();
             data.ValueRW.gridMap.Dispose();
             data.ValueRW.costMap.Dispose();
+            data.ValueRW.totalGridMapEntityArray.Dispose();
         }
 
         private void FlowFieldPathfinding(ref SystemState state, int2 targetPos, GridSystemData data, int gridIndex)
@@ -153,27 +172,22 @@ namespace DotsRTS
             NativeArray<RefRW<GridNode>> gridNodeArray = new NativeArray<RefRW<GridNode>>(data.width * data.height, Allocator.Temp);
 
             //Initialize nodes
-            for (int x = 0; x < data.width; ++x)
+            InitializeGridJob initializeJob = new InitializeGridJob
             {
-                for (int y = 0; y < data.height; ++y)
+                gridIndex = gridIndex,
+                targetPos = targetPos,
+            };
+            JobHandle initializeJobHandle = initializeJob.ScheduleParallel(state.Dependency);
+            initializeJobHandle.Complete();
+
+            for(int x = 0; x < data.width; x++)
+            {
+                for(int y = 0; y < data.height; y++)
                 {
                     int index = CalculateIndex(x, y, data.width);
                     Entity entity = data.gridMap[gridIndex].gridEntities[index];
-
-                    var gridNode = SystemAPI.GetComponentRW<GridNode>(entity);
-                    gridNodeArray[index] = gridNode;
-
-                    gridNode.ValueRW.vector = new float2(0, 1);
-                    if (x == targetPos.x && y == targetPos.y)
-                    {
-                        gridNode.ValueRW.cost = 0;
-                        gridNode.ValueRW.bestCost = 0;
-                    }
-                    else
-                    {
-                        gridNode.ValueRW.cost = 1;
-                        gridNode.ValueRW.bestCost = int.MaxValue;
-                    }
+                    var node = SystemAPI.GetComponentRW<GridNode>(entity);
+                    gridNodeArray[index] = node;
                 }
             }
 
@@ -181,39 +195,29 @@ namespace DotsRTS
             PhysicsWorldSingleton physics = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             CollisionWorld collision = physics.CollisionWorld;
 
-            NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
-            var filter = new CollisionFilter
+            UpdateCostMapJob updateCostJob = new UpdateCostMapJob
             {
-                BelongsTo = ~0u,
-                CollidesWith = 1u << GameAssets.PATHFINDING_WALLS,
-                GroupIndex = 0
-            }; 
-            var filterHeavy = new CollisionFilter
-            {
-                BelongsTo = ~0u,
-                CollidesWith = 1u << GameAssets.PATHFINDING_HEAVY,
-                GroupIndex = 0
-            };
-            for (int x = 0; x < data.width; ++x)
-            {
-                for (int y = 0; y < data.height; ++y)
+                width = data.width,
+                gridNodeSize = data.gridNodeSize,
+                collision = collision,
+                costMap = data.costMap,
+                gridMap = data.gridMap[gridIndex],
+                gridNodeLookup = gridNodeLookup,
+                filter = new CollisionFilter
                 {
-                    var pos = GetWorldCenterPosition(x, y, data.gridNodeSize);
-                    if (collision.OverlapSphere(pos, data.gridNodeSize * 0.5f, ref distanceHits, filter))
-                    {
-                        int index = CalculateIndex(x, y, data.width);
-                        gridNodeArray[index].ValueRW.cost = WALL_COST;
-                        data.costMap[index] = WALL_COST;
-                    }
-                    if (collision.OverlapSphere(pos, data.gridNodeSize * 0.5f, ref distanceHits, filterHeavy))
-                    {
-                        int index = CalculateIndex(x, y, data.width);
-                        gridNodeArray[index].ValueRW.cost = HEAVY_COST;
-                        data.costMap[index] = HEAVY_COST;
-                    }
+                    BelongsTo = ~0u,
+                    CollidesWith = 1u << GameAssets.PATHFINDING_WALLS,
+                    GroupIndex = 0
+                },
+                filterHeavy = new CollisionFilter
+                {
+                    BelongsTo = ~0u,
+                    CollidesWith = 1u << GameAssets.PATHFINDING_HEAVY,
+                    GroupIndex = 0
                 }
-            }
-            distanceHits.Dispose();
+            };
+            JobHandle updateCostJobHandle = updateCostJob.ScheduleParallel(data.width * data.height,50, state.Dependency);
+            updateCostJobHandle.Complete();
 
             //Calculate costs
             NativeQueue<RefRW<GridNode>> gridQueue = new NativeQueue<RefRW<GridNode>>(Allocator.Temp);
@@ -227,8 +231,8 @@ namespace DotsRTS
                 var neighbours = GetNeighbours(currentNode, gridNodeArray, data.width, data.height);
                 foreach (var node in neighbours)
                 {
-                    //if (node.ValueRO.cost == WALL_COST)
-                    //    continue;
+                    if (node.ValueRO.cost == WALL_COST)
+                        continue;
 
                     int newBestCost = currentNode.ValueRO.bestCost + node.ValueRO.cost;
                     if (newBestCost < node.ValueRO.bestCost)
@@ -257,6 +261,12 @@ namespace DotsRTS
         public static int CalculateIndex(int2 pos, int width)
         {
             return CalculateIndex(pos.x, pos.y, width);
+        }
+        public static int2 GetGridPositionFromIndex(int index, int width)
+        {
+            int y = (int)math.floor(index / width);
+            int x = index % width;
+            return new int2(x, y);
         }
 
         public static float3 GetWorldPosition(int x, int y, float gridNodeSize)
@@ -327,10 +337,82 @@ namespace DotsRTS
             return data.costMap[CalculateIndex(gridPos, data.width)] == WALL_COST;
         }
 
+        public static bool IsWall(int2 gridPos, int width, NativeArray<byte> costMap)
+        {
+            return costMap[CalculateIndex(gridPos, width)] == WALL_COST;
+        }
+
         public static bool IsValidWalkablePosition(float3 worldPos, GridSystemData data)
         {
             int2 gridPos = GetGridPosition(worldPos, data.gridNodeSize);
             return IsValidGridPosition(gridPos, data.width, data.height) && !IsWall(gridPos, data);
+        }
+        public static bool IsValidWalkablePosition(float3 worldPos, float gridNodeSize, int width, int height, NativeArray<byte> costMap)
+        {
+            int2 gridPos = GetGridPosition(worldPos, gridNodeSize);
+            return IsValidGridPosition(gridPos, width, height) && !IsWall(gridPos, width, costMap);
+        }
+    }
+
+    [BurstCompile]
+    public partial struct InitializeGridJob: IJobEntity
+    {
+        [ReadOnly] public int gridIndex;
+        [ReadOnly] public int2 targetPos;
+
+        public void Execute(ref GridNode gridNode)
+        {
+            if (gridIndex != gridNode.gridIndex)
+                return;
+
+            gridNode.vector = new float2(0, 1);
+            if (gridNode.x == targetPos.x && gridNode.y == targetPos.y)
+            {
+                gridNode.cost = 0;
+                gridNode.bestCost = 0;
+            }
+            else
+            {
+                gridNode.cost = 1;
+                gridNode.bestCost = int.MaxValue;
+            }
+        }
+    }
+
+    [BurstCompile]
+    public partial struct UpdateCostMapJob: IJobFor
+    {
+        [NativeDisableParallelForRestriction] public ComponentLookup<GridNode> gridNodeLookup;
+        [NativeDisableParallelForRestriction] public NativeArray<byte> costMap;
+
+        [ReadOnly] public int width;
+        [ReadOnly] public float gridNodeSize;
+        [ReadOnly] public CollisionWorld collision;
+        [ReadOnly] public GridMap gridMap;
+        [ReadOnly] public CollisionFilter filter;
+        [ReadOnly] public CollisionFilter filterHeavy;
+
+        public void Execute(int index)
+        {
+            NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
+
+            var gridPos = GetGridPositionFromIndex(index, width);
+            var pos = GetWorldCenterPosition(gridPos.x, gridPos.y, gridNodeSize);
+            if (collision.OverlapSphere(pos, gridNodeSize * 0.5f, ref distanceHits, filter))
+            {
+                GridNode node = gridNodeLookup[gridMap.gridEntities[index]];
+                node.cost = WALL_COST;
+                gridNodeLookup[gridMap.gridEntities[index]] = node;
+                costMap[index] = WALL_COST;
+            }
+            if (collision.OverlapSphere(pos, gridNodeSize * 0.5f, ref distanceHits, filterHeavy))
+            {
+                GridNode node = gridNodeLookup[gridMap.gridEntities[index]];
+                node.cost = HEAVY_COST;
+                gridNodeLookup[gridMap.gridEntities[index]] = node;
+                costMap[index] = HEAVY_COST;
+            }
+            distanceHits.Dispose();
         }
     }
 }
