@@ -575,7 +575,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4676088925839298878, guid: c9beddf3a0f3abe4eae07de55b5f82d7, type: 3}
       propertyPath: maxZombies
-      value: 0
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 6124250435364868605, guid: c9beddf3a0f3abe4eae07de55b5f82d7, type: 3}
       propertyPath: m_Name

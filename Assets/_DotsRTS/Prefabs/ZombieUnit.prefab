@@ -59,6 +59,10 @@ PrefabInstance:
       propertyPath: meleeAnim
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 1066060369141219230, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 32da663a35bf87442bd3804ca3ec834f, type: 2}
     - target: {fileID: 3175282231348110193, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: m_Name
       value: ZombieUnit
