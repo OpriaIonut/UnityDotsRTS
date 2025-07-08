@@ -4,20 +4,27 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Rendering;
 using Unity.Transforms;
+using Unity.Collections;
 
 namespace DotsRTS
 {
     partial struct VisualUnderFogOfWarSystem : ISystem
     {
+        private ComponentLookup<LocalTransform> transfLookup;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameSceneTag>();
+
+            transfLookup = state.GetComponentLookup<LocalTransform>(true);
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            transfLookup.Update(ref state);
+
             PhysicsWorldSingleton physics = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             CollisionWorld collision = physics.CollisionWorld;
 
@@ -30,24 +37,50 @@ namespace DotsRTS
 
             var buffer = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            foreach(var (fow, entity) in SystemAPI.Query<RefRW<VisualUnderFogOfWar>>().WithEntityAccess())
+            var job = new VisualUnderFogOfWarJob
             {
-                LocalTransform parentTransf = SystemAPI.GetComponent<LocalTransform>(fow.ValueRO.parentEntity);
-                if(!collision.SphereCast(parentTransf.Position, fow.ValueRO.sphereCastSize, new float3(0, 1, 0), 100, filter))
+                buffer = buffer.AsParallelWriter(),
+                filter = filter,
+                collision = collision,
+                deltaTime = SystemAPI.Time.DeltaTime,
+                transfLookup = transfLookup
+            };
+            job.ScheduleParallel();
+        }
+    }
+
+    [BurstCompile]
+    public partial struct VisualUnderFogOfWarJob: IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter buffer;
+
+        [ReadOnly] public ComponentLookup<LocalTransform> transfLookup;
+        [ReadOnly] public CollisionWorld collision;
+        [ReadOnly] public CollisionFilter filter;
+        [ReadOnly] public float deltaTime;
+
+        public void Execute(ref VisualUnderFogOfWar fow, [ChunkIndexInQuery] int chunkIndexInQuery, Entity entity)
+        {
+            fow.timer -= deltaTime;
+            if (fow.timer > 0)
+                return;
+            fow.timer = fow.timerMax;
+
+            LocalTransform parentTransf = transfLookup[fow.parentEntity];
+            if (!collision.SphereCast(parentTransf.Position, fow.sphereCastSize, new float3(0, 1, 0), 100, filter))
+            {
+                if (fow.isVisible)
                 {
-                    if(fow.ValueRO.isVisible)
-                    {
-                        fow.ValueRW.isVisible = false;
-                        buffer.AddComponent<DisableRendering>(entity);
-                    }
+                    fow.isVisible = false;
+                    buffer.AddComponent<DisableRendering>(chunkIndexInQuery, entity);
                 }
-                else
+            }
+            else
+            {
+                if (!fow.isVisible)
                 {
-                    if(!fow.ValueRO.isVisible)
-                    {
-                        fow.ValueRW.isVisible = true;
-                        buffer.RemoveComponent<DisableRendering>(entity);
-                    }
+                    fow.isVisible = true;
+                    buffer.RemoveComponent<DisableRendering>(chunkIndexInQuery, entity);
                 }
             }
         }

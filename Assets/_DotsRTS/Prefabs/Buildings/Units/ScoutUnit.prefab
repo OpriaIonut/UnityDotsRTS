@@ -319,7 +319,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7046476883370382150, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: movementSpeed
-      value: 10
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 7485469587781652356, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: m_Mesh
@@ -397,6 +397,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerMax: 0.5
-  damage: 3
+  damage: 7
   attackDistance: 10
   firePoint: {fileID: 4324735431517668832}

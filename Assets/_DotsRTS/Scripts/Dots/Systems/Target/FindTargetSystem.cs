@@ -4,18 +4,32 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using UnityEngine;
 
 namespace DotsRTS
 {
     partial struct FindTargetSystem : ISystem
     {
+        private ComponentLookup<LocalTransform> transformLookup;
+        private ComponentLookup<Faction> factionLookup;
+        public EntityStorageInfoLookup entityStorage;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            factionLookup = state.GetComponentLookup<Faction>(true);
+            entityStorage = state.GetEntityStorageInfoLookup();
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            transformLookup.Update(ref state);
+            factionLookup.Update(ref state);
+            entityStorage.Update(ref state);
+
             PhysicsWorldSingleton physics = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
             CollisionWorld collision = physics.CollisionWorld;
-            NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
 
             CollisionFilter filter = new CollisionFilter
             {
@@ -24,58 +38,83 @@ namespace DotsRTS
                 GroupIndex = 0
             };
 
-            foreach (var (transf, findTarget, target, targetOverride) in SystemAPI.Query<RefRO<LocalTransform>, RefRW<FindTarget>, RefRW<Target>, RefRO<TargetOverride>>())
+            var job = new FindTargetJob
             {
-                //Run the logic only once in a while
-                findTarget.ValueRW.timer -= SystemAPI.Time.DeltaTime;
-                if (findTarget.ValueRO.timer > 0.0f)
-                    continue;
-                findTarget.ValueRW.timer = findTarget.ValueRO.timerMax;
+                deltaTime = SystemAPI.Time.DeltaTime,
+                collision = collision,
+                filter = filter,
+                transformLookup = transformLookup,
+                factionLookup = factionLookup,
+                entityStorage = entityStorage
+            };
+            job.ScheduleParallel();
+        }
+    }
+
+    [BurstCompile]
+    public partial struct FindTargetJob: IJobEntity
+    {
+        [ReadOnly] public ComponentLookup<LocalTransform> transformLookup;
+        [ReadOnly] public ComponentLookup<Faction> factionLookup;
+        [ReadOnly] public EntityStorageInfoLookup entityStorage;
+
+        [ReadOnly] public float deltaTime;
+        [ReadOnly] public CollisionWorld collision;
+        [ReadOnly] public CollisionFilter filter;
+
+        public void Execute(in LocalTransform transf, ref FindTarget findTarget, ref Target target, in TargetOverride targetOverride)
+        {
+            //Run the logic only once in a while
+            findTarget.timer -= deltaTime;
+            if (findTarget.timer > 0.0f)
+                return;
+            findTarget.timer += findTarget.timerMax;
 
 
-                if (targetOverride.ValueRO.target != Entity.Null)
+            if (targetOverride.target != Entity.Null)
+            {
+                target.target = targetOverride.target;
+                return;
+            }
+
+            NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.TempJob);
+
+            Entity closestTarget = Entity.Null;
+            float closestDistance = float.MaxValue;
+            float closestDistanceOffset = 0f;
+            if (target.target != Entity.Null)
+            {
+                closestTarget = target.target;
+                var targetTransf = transformLookup[target.target];
+                closestDistance = math.distance(transf.Position, targetTransf.Position);
+                closestDistanceOffset = 2f;
+            }
+
+            if (collision.OverlapSphere(transf.Position, findTarget.range, ref distanceHits, filter))
+            {
+                foreach (DistanceHit hit in distanceHits)
                 {
-                    target.ValueRW.target = targetOverride.ValueRO.target;
-                    continue;
-                }
+                    if (!entityStorage.Exists(hit.Entity) || !factionLookup.HasComponent(hit.Entity))
+                        continue;
 
-                if (distanceHits.Length > 0)
-                    distanceHits.Clear();
-
-                Entity closestTarget = Entity.Null;
-                float closestDistance = float.MaxValue;
-                float closestDistanceOffset = 0f;
-                if(target.ValueRO.target != Entity.Null)
-                {
-                    closestTarget = target.ValueRO.target;
-                    var targetTransf = SystemAPI.GetComponent<LocalTransform>(target.ValueRO.target);
-                    closestDistance = math.distance(transf.ValueRO.Position, targetTransf.Position);
-                    closestDistanceOffset = 2f;
-                }
-
-                if (collision.OverlapSphere(transf.ValueRO.Position, findTarget.ValueRO.range, ref distanceHits, filter))
-                {
-                    foreach (DistanceHit hit in distanceHits)
+                    Faction unit = factionLookup[hit.Entity];
+                    if (findTarget.targetFaction == unit.faction)
                     {
-                        Faction unit = SystemAPI.GetComponent<Faction>(hit.Entity);
-                        if (findTarget.ValueRO.targetFaction == unit.faction)
+                        if (closestTarget == Entity.Null)
                         {
-                            if (closestTarget == Entity.Null)
-                            {
-                                closestTarget = hit.Entity;
-                                closestDistance = hit.Distance;
-                            }
-                            else if(hit.Distance + closestDistanceOffset < closestDistance)
-                            {
-                                closestDistance = hit.Distance;
-                                closestTarget = hit.Entity;
-                            }
+                            closestTarget = hit.Entity;
+                            closestDistance = hit.Distance;
+                        }
+                        else if (hit.Distance + closestDistanceOffset < closestDistance)
+                        {
+                            closestDistance = hit.Distance;
+                            closestTarget = hit.Entity;
                         }
                     }
                 }
-                if(closestTarget != Entity.Null)
-                    target.ValueRW.target = closestTarget;
             }
+            if (closestTarget != Entity.Null)
+                target.target = closestTarget;
         }
     }
 }

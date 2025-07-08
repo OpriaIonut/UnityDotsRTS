@@ -54,8 +54,8 @@ namespace DotsRTS
 #endif
         public void OnCreate(ref SystemState state)
         {
-            int width = 20;
-            int height = 10;
+            int width = 40;
+            int height = 40;
             float gridNodeSize = 5f;
             int totalCount = width * height;
 

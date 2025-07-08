@@ -17,7 +17,6 @@ namespace DotsRTS
             state.RequireForUpdate<AnimationDataholderObjectData>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             Dictionary<AnimationType, int[]> blobAssetData = new Dictionary<AnimationType, int[]>();

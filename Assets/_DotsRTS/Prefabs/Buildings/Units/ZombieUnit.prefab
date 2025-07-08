@@ -47,6 +47,10 @@ PrefabInstance:
       propertyPath: range
       value: 15
       objectReference: {fileID: 0}
+    - target: {fileID: -1332405735374714051, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
+      propertyPath: timerMax
+      value: 0.35
+      objectReference: {fileID: 0}
     - target: {fileID: 151546269191894148, guid: 51f120d3734d5b145a3f4b4a8a0732dd, type: 3}
       propertyPath: idleAnim
       value: 3

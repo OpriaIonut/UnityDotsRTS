@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Rendering;
 using UnityEngine;
 
 namespace DotsRTS
@@ -8,6 +9,8 @@ namespace DotsRTS
         public bool isVisible;
         public Entity parentEntity;
         public float sphereCastSize;
+        public float timer;
+        public float timerMax;
     }
 
     class VisualUnderFogOfWarAuthoring : MonoBehaviour
@@ -22,10 +25,13 @@ namespace DotsRTS
                 Entity entity = GetEntity(TransformUsageFlags.Dynamic);
                 AddComponent(entity, new VisualUnderFogOfWar
                 {
-                    isVisible = true,
+                    isVisible = false,
                     parentEntity = GetEntity(authoring.parent, TransformUsageFlags.Dynamic),
-                    sphereCastSize = authoring.sphereCastSize
+                    sphereCastSize = authoring.sphereCastSize,
+                    timer = 0f,
+                    timerMax = 0.2f
                 });
+                AddComponent(entity, new DisableRendering());
             }
         }
     }
