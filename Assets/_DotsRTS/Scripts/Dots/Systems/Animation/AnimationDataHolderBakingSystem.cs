@@ -12,6 +12,12 @@ namespace DotsRTS
     partial struct AnimationDataHolderBakingSystem : ISystem
     {
         [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<AnimationDataholderObjectData>();
+        }
+
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             Dictionary<AnimationType, int[]> blobAssetData = new Dictionary<AnimationType, int[]>();

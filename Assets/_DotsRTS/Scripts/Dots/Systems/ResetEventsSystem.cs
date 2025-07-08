@@ -40,14 +40,14 @@ namespace DotsRTS
             {
                 onHealthDeadEntityList = onHealthDeadEntityList.AsParallelWriter()
             }.ScheduleParallel(state.Dependency).Complete();
-            DotsEventsManager.Instance.TriggerOnHealthDead(onHealthDeadEntityList);
+            DotsEventsManager.Instance?.TriggerOnHealthDead(onHealthDeadEntityList);
 
             barrackQueueChangedList.Clear();
             new ResetBuildingBarracksEventsJob()
             {
                 onUnitQueueChangedEntityList = barrackQueueChangedList.AsParallelWriter()
             }.ScheduleParallel(state.Dependency).Complete();
-            DotsEventsManager.Instance.TriggerOnBarracksUnitQueueChanged(barrackQueueChangedList);
+            DotsEventsManager.Instance?.TriggerOnBarracksUnitQueueChanged(barrackQueueChangedList);
 
             state.Dependency = JobHandle.CombineDependencies(spawnedJobs);
         }

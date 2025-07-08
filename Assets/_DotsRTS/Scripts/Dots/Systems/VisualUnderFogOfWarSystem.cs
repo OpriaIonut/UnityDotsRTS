@@ -10,6 +10,12 @@ namespace DotsRTS
     partial struct VisualUnderFogOfWarSystem : ISystem
     {
         [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<GameSceneTag>();
+        }
+
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             PhysicsWorldSingleton physics = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
