@@ -11,6 +11,7 @@ namespace DotsRTS
         private void Start()
         {
             DotsEventsManager.Instance.OnHQDead += OnHQDead;
+            DotsEventsManager.Instance.OnGameWin += OnHQDead;
             mainMenuBtn.onClick.AddListener(() =>
             {
                 Time.timeScale = 1.0f;

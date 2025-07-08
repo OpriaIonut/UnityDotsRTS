@@ -12,10 +12,12 @@ namespace DotsRTS
     {
         [SerializeField] private BuildingTypeSO buildingType;
         [SerializeField] private UnityEngine.Material ghostMaterial;
+        [SerializeField] private UnityEngine.Material ghostRedMaterial;
 
         public UnityAction OnActiveBuildingTypeChanged;
 
         private Transform ghostTransform;
+        private UnityEngine.Material activeGhostMaterial;
 
         #region Singleton
         public static BuildingPlacementManager Instance { get; private set; }
@@ -48,20 +50,54 @@ namespace DotsRTS
                 return;
 
             if (buildingType.buildingType == BuildingType.None)
+            {
+                TooltipScreenSpaceUI.HideTooltip_Static();
                 return;
+            }
 
             if(Input.GetMouseButtonDown(1))
             {
                 BuildingTypeListSO buildingList = GameAssets.Instance.buildingTypeList;
                 SetActiveBuildingTypeSO(buildingList.GetBuildingDataSO(BuildingType.None));
+                TooltipScreenSpaceUI.HideTooltip_Static();
+                return;
             }
 
-            if(Input.GetMouseButtonDown(0))
+            TooltipScreenSpaceUI.ShowTooltip_Static(buildingType.name + "\n" + ResourceAmount.GetString(buildingType.buildCosts), .5f);
+
+            if (!ResourceManager.Instance.CanSpendResourceAmount(buildingType.buildCosts))
+            {
+                // Cannot afford this building
+                SetGhostMaterial(ghostRedMaterial);
+                TooltipScreenSpaceUI.ShowTooltip_Static(buildingType.name + "\n" + ResourceAmount.GetString(buildingType.buildCosts) + "\n" +
+                    "<color=#ff0000>Cannot afford resource cost!</color>", .05f);
+                return;
+            }
+            else
+            {
+                SetGhostMaterial(ghostMaterial);
+            }
+
+            Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
+
+            if (!CanPlaceBuilding(mouseWorldPos, out string errorMessage))
+            {
+                // Cannot place building here
+                SetGhostMaterial(ghostRedMaterial);
+                TooltipScreenSpaceUI.ShowTooltip_Static(buildingType.name + "\n" + ResourceAmount.GetString(buildingType.buildCosts) + "\n" +
+                    "<color=#ff0000>" + errorMessage + "</color>", .05f);
+                return;
+            }
+            else
+            {
+                SetGhostMaterial(ghostMaterial);
+            }
+
+            if (Input.GetMouseButtonDown(0))
             {
                 if (ResourceManager.Instance.CanSpendResourceAmount(buildingType.buildCosts))
                 {
-                    Vector3 mouseWorldPos = MouseWorldPosition.Instance.GetPosition();
-                    if (CanPlaceBuilding(mouseWorldPos))
+                    if (CanPlaceBuilding(mouseWorldPos, out string errorMsg))
                     {
                         ResourceManager.Instance.SpendResourceAmount(buildingType.buildCosts);
 
@@ -95,7 +131,7 @@ namespace DotsRTS
             }
         }
 
-        private bool CanPlaceBuilding(Vector3 pos)
+        private bool CanPlaceBuilding(Vector3 pos, out string errorMessage)
         {
             EntityManager entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
@@ -116,6 +152,7 @@ namespace DotsRTS
             NativeList<DistanceHit> distanceList = new NativeList<DistanceHit>(Allocator.Temp);
             if(collision.OverlapBox(pos, Quaternion.identity, col.size * 0.5f * bonusExtends, ref distanceList, filter))
             {
+                errorMessage = "Build area must be clear!";
                 return false;
             }
 
@@ -128,13 +165,19 @@ namespace DotsRTS
                     {
                         var holder = entityManager.GetComponentData<BuildingTypeSOHolder>(hit.Entity);
                         if (holder.buildingType == buildingType.buildingType)
+                        {
+                            errorMessage = "Same Building Type too close!";
                             return false;
+                        }
                     }
                     if (entityManager.HasComponent<BuildingConstruction>(hit.Entity))
                     {
                         var holder = entityManager.GetComponentData<BuildingConstruction>(hit.Entity);
                         if (holder.buildingType == buildingType.buildingType)
+                        {
+                            errorMessage = "Same Building Type too close!";
                             return false;
+                        }
                     }
                 }
             }
@@ -159,9 +202,13 @@ namespace DotsRTS
                     }
                 }
                 if (!hasNearbyResource)
+                {
+                    errorMessage = "No valid Resource Nodes nearby!";
                     return false;
+                }
             }
 
+            errorMessage = null;
             return true;
         }
 
@@ -181,13 +228,26 @@ namespace DotsRTS
             if (buildingType.buildingType != BuildingType.None)
             {
                 ghostTransform = Instantiate(buildingType.visualPrefab);
-                foreach(MeshRenderer rend in ghostTransform.GetComponentsInChildren<MeshRenderer>())
-                {
-                    rend.material = ghostMaterial;
-                }
+                SetGhostMaterial(ghostMaterial);
             }
 
             OnActiveBuildingTypeChanged?.Invoke();
+        }
+
+        private void SetGhostMaterial(UnityEngine.Material ghostMaterial)
+        {
+            if (activeGhostMaterial == ghostMaterial)
+            {
+                // Already set this material
+                return;
+            }
+
+            activeGhostMaterial = ghostMaterial;
+
+            foreach (MeshRenderer meshRenderer in ghostTransform.GetComponentsInChildren<MeshRenderer>())
+            {
+                meshRenderer.material = ghostMaterial;
+            }
         }
     }
 }

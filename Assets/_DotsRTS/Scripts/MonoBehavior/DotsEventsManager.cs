@@ -11,6 +11,7 @@ namespace DotsRTS
         public event EventHandler OnBarracksQueueChanged;
         public event EventHandler OnHealthDead;
         public UnityAction OnHQDead;
+        public UnityAction OnGameWin;
 
         #region Singleton
         public static DotsEventsManager Instance { get; private set; }
@@ -45,6 +46,12 @@ namespace DotsRTS
             {
                 OnHealthDead?.Invoke(entity, EventArgs.Empty);
             }
+        }
+
+
+        public void TriggerOnGameWin()
+        {
+            OnGameWin?.Invoke();
         }
     }
 }
