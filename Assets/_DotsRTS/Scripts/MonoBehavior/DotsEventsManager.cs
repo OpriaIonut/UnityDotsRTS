@@ -9,6 +9,7 @@ namespace DotsRTS
     public class DotsEventsManager : MonoBehaviour
     {
         public event EventHandler OnBarracksQueueChanged;
+        public event EventHandler OnHealthDead;
         public UnityAction OnHQDead;
 
         #region Singleton
@@ -36,6 +37,14 @@ namespace DotsRTS
         public void TriggerOnHQDead()
         {
             OnHQDead?.Invoke();
+        }
+
+        public void TriggerOnHealthDead(NativeList<Entity> entities)
+        {
+            foreach (var entity in entities)
+            {
+                OnHealthDead?.Invoke(entity, EventArgs.Empty);
+            }
         }
     }
 }

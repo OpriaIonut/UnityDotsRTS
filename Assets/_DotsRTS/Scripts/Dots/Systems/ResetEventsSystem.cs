@@ -10,12 +10,14 @@ namespace DotsRTS
     {
         private NativeArray<JobHandle> spawnedJobs;
         private NativeList<Entity> barrackQueueChangedList;
+        private NativeList<Entity> onHealthDeadEntityList;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            spawnedJobs = new NativeArray<JobHandle>(4, Allocator.Persistent);
+            spawnedJobs = new NativeArray<JobHandle>(3, Allocator.Persistent);
             barrackQueueChangedList = new NativeList<Entity>(Allocator.Persistent);
+            onHealthDeadEntityList = new NativeList<Entity>(Allocator.Persistent);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -30,16 +32,21 @@ namespace DotsRTS
             }
 
             spawnedJobs[0] = new ResetSelectedEventsJob().ScheduleParallel(state.Dependency);
-            spawnedJobs[1] = new ResetHealthEventsJob().ScheduleParallel(state.Dependency);
-            spawnedJobs[2] = new ResetShootAttackEventsJob().ScheduleParallel(state.Dependency);
-            spawnedJobs[3] = new ResetMeleeAttackEventsJob().ScheduleParallel(state.Dependency);
+            spawnedJobs[1] = new ResetShootAttackEventsJob().ScheduleParallel(state.Dependency);
+            spawnedJobs[2] = new ResetMeleeAttackEventsJob().ScheduleParallel(state.Dependency);
+
+            onHealthDeadEntityList.Clear();
+            new ResetHealthEventsJob()
+            {
+                onHealthDeadEntityList = onHealthDeadEntityList.AsParallelWriter()
+            }.ScheduleParallel(state.Dependency).Complete();
+            DotsEventsManager.Instance.TriggerOnHealthDead(onHealthDeadEntityList);
 
             barrackQueueChangedList.Clear();
             new ResetBuildingBarracksEventsJob()
             {
                 onUnitQueueChangedEntityList = barrackQueueChangedList.AsParallelWriter()
             }.ScheduleParallel(state.Dependency).Complete();
-
             DotsEventsManager.Instance.TriggerOnBarracksUnitQueueChanged(barrackQueueChangedList);
 
             state.Dependency = JobHandle.CombineDependencies(spawnedJobs);
@@ -50,14 +57,22 @@ namespace DotsRTS
         {
             spawnedJobs.Dispose();
             barrackQueueChangedList.Dispose();
+            onHealthDeadEntityList.Dispose();
         }
     }
 
     [BurstCompile]
     public partial struct ResetHealthEventsJob : IJobEntity
     {
-        public void Execute(ref Health health)
+        public NativeList<Entity>.ParallelWriter onHealthDeadEntityList;
+
+        public void Execute(ref Health health, Entity entity)
         {
+            if(health.onDead)
+            {
+                onHealthDeadEntityList.AddNoResize(entity);
+            }
+
             health.onHealthChanged = false;
             health.onDead = false;
         }
