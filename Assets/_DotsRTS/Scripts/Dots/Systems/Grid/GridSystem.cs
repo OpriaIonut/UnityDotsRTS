@@ -6,7 +6,6 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
-using UnityEngine;
 using static DotsRTS.GridSystem;
 
 namespace DotsRTS

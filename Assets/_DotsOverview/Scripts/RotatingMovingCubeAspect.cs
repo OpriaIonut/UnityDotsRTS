@@ -1,7 +1,5 @@
 using Unity.Entities;
 using Unity.Transforms;
-using UnityEngine;
-using static UnityEditor.Progress;
 
 namespace DotsOverview
 {

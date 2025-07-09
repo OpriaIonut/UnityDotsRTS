@@ -1,9 +1,6 @@
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace DotsRTS
 {
